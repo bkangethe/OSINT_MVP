@@ -1,10 +1,16 @@
-def check_alerts(profiles, threshold=70):
-    alerts = []
-    for p in profiles:
-        if p["risk_score"] >= threshold:
-            alerts.append({
-                "user": p["name"],
-                "risk": p["risk_score"],
-                "reason": p["nlp"]["label"]
-            })
-    return alerts
+import requests, os, smtplib
+from email.message import EmailMessage
+
+def send_webhook(message):
+    requests.post(os.environ["WEBHOOK_URL"], json={"text": message})
+
+def send_email(subject, body):
+    msg = EmailMessage()
+    msg.set_content(body)
+    msg["Subject"] = subject
+    msg["From"] = os.environ["ALERT_EMAIL"]
+    msg["To"] = os.environ["ALERT_EMAIL"]
+
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+        server.login(os.environ["ALERT_EMAIL"], os.environ["EMAIL_PASS"])
+        server.send_message(msg)
