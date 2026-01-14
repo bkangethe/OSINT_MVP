@@ -1,26 +1,27 @@
-from flask import Flask, request, jsonify, send_from_directory
-import asyncio
-from osint import batch_lookup
+from flask import Flask, request, jsonify
+from osint import run_osint
+from vision import analyze_image
 
-app = Flask(__name__, static_folder="../frontend", template_folder="../frontend")
-
-@app.route("/")
-def index():
-    return send_from_directory(app.static_folder, "index.html")
+app = Flask(__name__)
 
 @app.route("/check", methods=["POST"])
 def check():
     data = request.json
-    names_text = data.get("usernames", "")
-    names = [n.strip() for n in names_text.split(",") if n.strip()]
-    if not names:
-        return jsonify({"error": "No usernames provided"}), 400
-    result = asyncio.run(batch_lookup(names))
-    return jsonify(result)
+    username = data.get("username")
 
-@app.route("/<path:filename>")
-def static_files(filename):
-    return send_from_directory(app.static_folder, filename)
+    if not username:
+        return jsonify({"error": "Username required"}), 400
+
+    results = run_osint(username)
+    return jsonify(results)
+
+@app.route("/vision", methods=["POST"])
+def vision_check():
+    if "image" not in request.files:
+        return jsonify({"error": "No image uploaded"}), 400
+    image = request.files["image"]
+    result = analyze_image(image)
+    return jsonify(result)
 
 if __name__ == "__main__":
     app.run(debug=True)

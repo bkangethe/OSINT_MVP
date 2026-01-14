@@ -1,4 +1,9 @@
 flask
+gunicorn
 aiohttp
 beautifulsoup4
 rapidfuzz
+transformers
+torch
+langdetect
+sentence-transformers
