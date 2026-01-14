@@ -1,0 +1,74 @@
+[
+  {
+    "target": "john-doe",
+    "checks": {
+      "stack_overflow": null,
+      "soundcloud": "https://soundcloud.com/john-doe",
+      "instagram": "https://www.instagram.com/john-doe/",
+      "youtube": "https://www.youtube.com/@john-doe",
+      "flickr": "https://www.flickr.com/people/john-doe/",
+      "gitlab": "https://gitlab.com/john-doe",
+      "twitch": "https://www.twitch.tv/john-doe",
+      "reddit": null,
+      "tiktok": "https://www.tiktok.com/@john-doe",
+      "devto": "https://dev.to/john-doe",
+      "twitter": null,
+      "github": "https://github.com/john-doe",
+      "vimeo": null,
+      "dribbble": "https://dribbble.com/john-doe",
+      "behance": "https://www.behance.net/john-doe",
+      "facebook": "/search?q=site:facebook.com+john-doe&sca_esv=d6706571e7d76b47&emsg=SG_REL&sei=3F5nacK8G4_d5OUPktSc2A8",
+      "linkedin": "/search?q=site:linkedin.com/in+john-doe&sca_esv=d6706571e7d76b47&emsg=SG_REL&sei=3F5nacqqG7uK5OUP9MPhgQE",
+      "medium": "/search?q=site:medium.com+john-doe&sca_esv=d6706571e7d76b47&emsg=SG_REL&sei=3F5naaCNGorT5OUPgvyI4A0",
+      "pinterest": "/search?q=site:pinterest.com+john-doe&sca_esv=d6706571e7d76b47&emsg=SG_REL&sei=3F5naejTG5qq5OUP8qO6mAo"
+    }
+  },
+  {
+    "target": "example123",
+    "checks": {
+      "instagram": "https://www.instagram.com/example123/",
+      "stack_overflow": null,
+      "youtube": "https://www.youtube.com/@example123",
+      "soundcloud": "https://soundcloud.com/example123",
+      "twitter": null,
+      "reddit": null,
+      "behance": null,
+      "twitch": "https://www.twitch.tv/example123",
+      "dribbble": null,
+      "flickr": "https://www.flickr.com/people/example123/",
+      "tiktok": "https://www.tiktok.com/@example123",
+      "devto": null,
+      "github": "https://github.com/example123",
+      "vimeo": null,
+      "gitlab": null,
+      "medium": "/search?q=site:medium.com+example123&sca_esv=d6706571e7d76b47&emsg=SG_REL&sei=3l5naYzALqO55OUPxdOX-AM",
+      "linkedin": "/search?q=site:linkedin.com/in+example123&sca_esv=d6706571e7d76b47&emsg=SG_REL&sei=3l5naZm4Lb6I5OUP0Kr10A8",
+      "facebook": "/search?q=site:facebook.com+example123&sca_esv=d6706571e7d76b47&emsg=SG_REL&sei=3l5nafbOLtmM5OUP4ZWYiAk",
+      "pinterest": "/search?q=site:pinterest.com+example123&sca_esv=d6706571e7d76b47&emsg=SG_REL&sei=3l5naeXMMdTa5OUPtvvp8A0"
+    }
+  },
+  {
+    "target": "nonexistentuser",
+    "checks": {
+      "stack_overflow": null,
+      "twitter": null,
+      "soundcloud": "https://soundcloud.com/nonexistentuser",
+      "instagram": "https://www.instagram.com/nonexistentuser/",
+      "youtube": null,
+      "twitch": "https://www.twitch.tv/nonexistentuser",
+      "reddit": null,
+      "dribbble": null,
+      "devto": null,
+      "behance": null,
+      "tiktok": "https://www.tiktok.com/@nonexistentuser",
+      "vimeo": null,
+      "github": null,
+      "gitlab": "https://gitlab.com/nonexistentuser",
+      "pinterest": "/search?q=site:pinterest.com+nonexistentuser&sca_esv=d6706571e7d76b47&emsg=SG_REL&sei=4V5nacpSt67k5Q-GuZCJAQ",
+      "flickr": null,
+      "linkedin": "/search?q=site:linkedin.com/in+nonexistentuser&sca_esv=d6706571e7d76b47&emsg=SG_REL&sei=4V5nad7tAveg5OUP8qC5wAg",
+      "facebook": "/search?q=site:facebook.com+nonexistentuser&sca_esv=d6706571e7d76b47&emsg=SG_REL&sei=4V5naYH7AauS5OUP3aGKgAM",
+      "medium": "/search?q=site:medium.com+nonexistentuser&sca_esv=d6706571e7d76b47&emsg=SG_REL&sei=4V5naYT0AYuw5OUP08PxyAI"
+    }
+  }
+]
