@@ -1,0 +1,7 @@
+flask
+gunicorn
+requests
+flask_sqlalchemy
+psycopg2-binary
+pyjwt
+networkx
