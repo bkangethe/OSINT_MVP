@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>OSINT Intelligence Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/static/styles.css" />
+
+  <style>
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: #0b0f14;
+      color: #e6e6e6;
+    }
+
+    header {
+      background: #111827;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #1f2933;
+    }
+
+    header h1 {
+      font-size: 20px;
+      margin: 0;
+      letter-spacing: 0.5px;
+    }
+
+    header span {
+      color: #9ca3af;
+      font-size: 13px;
+    }
+
+    .container {
+      padding: 24px;
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    .search-box {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    input, select, button {
+      background: #111827;
+      border: 1px solid #1f2933;
+      color: #e6e6e6;
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    input::placeholder {
+      color: #6b7280;
+    }
+
+    button {
+      cursor: pointer;
+      background: #2563eb;
+      border: none;
+    }
+
+    button:hover {
+      background: #1d4ed8;
+    }
+
+    .results {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      background: #111827;
+      border: 1px solid #1f2933;
+      border-radius: 10px;
+      padding: 16px;
+    }
+
+    .card h3 {
+      margin: 0 0 6px;
+      font-size: 16px;
+    }
+
+    .card p {
+      margin: 4px 0;
+      font-size: 13px;
+      color: #9ca3af;
+    }
+
+    .badge {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 4px 8px;
+      font-size: 12px;
+      border-radius: 999px;
+    }
+
+    .risk-low {
+      background: #064e3b;
+      color: #6ee7b7;
+    }
+
+    .risk-medium {
+      background: #78350f;
+      color: #fde68a;
+    }
+
+    .risk-high {
+      background: #7f1d1d;
+      color: #fecaca;
+    }
+
+    .loading {
+      color: #9ca3af;
+      margin-top: 12px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 16px;
+      font-size: 12px;
+      color: #6b7280;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <h1>OSINT Intelligence Platform</h1>
+    <span>The quieter you are, the more you hear</span>
+  </header>
+
+  <div class="container">
+
+    <div class="search-box">
+      <input id="searchInput" type="text" placeholder="Enter username or handle…" />
+      
+      <select id="platformFilter">
+        <option value="all">All Platforms</option>
+        <option value="twitter">Twitter / X</option>
+        <option value="instagram">Instagram</option>
+        <option value="tiktok">TikTok</option>
+        <option value="github">GitHub</option>
+      </select>
+
+      <button id="searchBtn">Run OSINT Check</button>
+    </div>
+
+    <div id="status" class="loading"></div>
+
+    <div id="results" class="results"></div>
+
+  </div>
+
+  <footer>
+    © OSINT MVP · Analyst View · Internal Use Only
+  </footer>
+
+  <script>
+    const searchBtn = document.getElementById("searchBtn");
+    const searchInput = document.getElementById("searchInput");
+    const platformFilter = document.getElementById("platformFilter");
+    const resultsContainer = document.getElementById("results");
+    const status = document.getElementById("status");
+
+    searchBtn.addEventListener("click", async () => {
+      const username = searchInput.value.trim();
+      if (!username) return;
+
+      resultsContainer.innerHTML = "";
+      status.textContent = "Running OSINT checks…";
+
+      try {
+        const res = await fetch("/api/check", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username })
+        });
+
+        const data = await res.json();
+        status.textContent = "";
+
+        if (!data.profiles || data.profiles.length === 0) {
+          status.textContent = "No profiles found.";
+          return;
+        }
+
+        let profiles = data.profiles;
+        const platform = platformFilter.value;
+
+        if (platform !== "all") {
+          profiles = profiles.filter(p => p.platform === platform);
+        }
+
+        profiles.forEach(p => {
+          const card = document.createElement("div");
+          card.className = "card";
+
+          const risk = p.nlp?.risk || "low";
+
+          card.innerHTML = `
+            <h3>${p.platform.toUpperCase()}</h3>
+            <p><strong>Username:</strong> ${p.username}</p>
+            <p><a href="${p.url}" target="_blank">View Profile</a></p>
+            <span class="badge risk-${risk}">Risk: ${risk.toUpperCase()}</span>
+          `;
+
+          resultsContainer.appendChild(card);
+        });
+
+      } catch (err) {
+        status.textContent = "Error running OSINT check.";
+      }
+    });
+  </script>
+
+</body>
+</html>

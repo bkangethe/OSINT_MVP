@@ -1,37 +1,40 @@
-from flask import Flask, send_from_directory, request, jsonify
+from flask import Flask, render_template, request, jsonify
 from models import db
 from auth import auth_bp
 from osint import basic_lookup
-import os, jwt
+import os
 
-app = Flask(__name__, static_folder="Frontend", static_url_path="")
+app = Flask(__name__)
 
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///local.db")
+# CONFIG
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev")
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db.init_app(app)
+
 with app.app_context():
     db.create_all()
 
-app.register_blueprint(auth_bp)
+# AUTH
+app.register_blueprint(auth_bp, url_prefix="/api/auth")
 
+# FRONTEND
 @app.route("/")
 def index():
-    return send_from_directory("Frontend", "index.html")
+    return render_template("index.html")
 
-@app.route("/<path:path>")
-def static_files(path):
-    return send_from_directory("Frontend", path)
-
+# API
 @app.route("/api/check", methods=["POST"])
-def check():
-    token = request.headers.get("Authorization", "").replace("Bearer ", "")
-    try:
-        jwt.decode(token, app.config["SECRET_KEY"], algorithms=["HS256"])
-    except:
-        return jsonify({"error": "Unauthorized"}), 401
+def check_user():
+    data = request.json or {}
+    username = data.get("username")
 
-    return jsonify(basic_lookup(request.json.get("username","")))
+    if not username:
+        return jsonify({"error": "username missing"}), 400
+
+    results = basic_lookup(username)
+    return jsonify(results)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
