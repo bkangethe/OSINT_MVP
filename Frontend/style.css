@@ -1,35 +1,74 @@
 body {
-    background:#0b0f1a;
-    color:#e5e7eb;
-    font-family:Inter,system-ui;
+    margin: 0;
+    background: #0b0f14;
+    color: #e5e7eb;
+    font-family: Inter, system-ui, sans-serif;
   }
   
-  header {
-    text-align:center;
-    margin:30px 0;
+  .app {
+    display: flex;
+    height: 100vh;
   }
   
-  h1 {
-    font-size:2.2rem;
-    letter-spacing:1px;
+  .sidebar {
+    width: 260px;
+    background: #020617;
+    padding: 20px;
+    border-right: 1px solid #1f2933;
   }
   
-  .grid {
-    display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
-    gap:20px;
+  .logo {
+    width: 48px;
+    margin-bottom: 10px;
+  }
+  
+  .tagline {
+    font-size: 13px;
+    color: #94a3b8;
+  }
+  
+  .main {
+    flex: 1;
+    padding: 24px;
+  }
+  
+  .search-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  
+  input, select, button {
+    background: #020617;
+    border: 1px solid #1f2933;
+    color: white;
+    padding: 10px;
+    border-radius: 6px;
+  }
+  
+  button {
+    background: #2563eb;
+    border: none;
+  }
+  
+  .results {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
   }
   
   .card {
-    background:#121826;
-    padding:16px;
-    border-radius:12px;
-    box-shadow:0 0 20px rgba(0,0,0,.4);
+    background: #020617;
+    border: 1px solid #1f2933;
+    border-radius: 10px;
+    padding: 14px;
   }
   
-  .card.high { border-left:4px solid #dc2626; }
-  .card.medium { border-left:4px solid #f59e0b; }
-  .card.low { border-left:4px solid #10b981; }
+  .risk {
+    display: inline-block;
+    margin-top: 8px;
+    font-size: 12px;
+  }
   
-  a { color:#60a5fa; text-decoration:none; }
+  .risk-low { color: #22c55e; }
   
