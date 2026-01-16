@@ -1,138 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>OSINT Intelligence Platform</title>
-  <link rel="stylesheet" href="/static/styles.css" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
-
 <body>
-
 <div class="app">
 
   <!-- SIDEBAR -->
-  <aside class="sidebar" id="sidebar">
-    <div class="brand">
-      <div class="logo-bg">
-        <img src="/static/logo.png" class="logo" alt="OSINT Logo" />
-      </div>
-      <span class="brand-text">OSINT</span>
+  <aside class="sidebar">
+    <div class="logo-container">
+      <img src="{{ url_for('static', filename='logo.png') }}" class="logo">
     </div>
+    <h1>OSINT</h1>
+    <p class="tagline">The quieter you are,<br>the more you hear</p>
 
-    <p class="tagline">
-      The quieter you are,<br>
-      the more you hear
-    </p>
-
-    <button class="collapse-btn" onclick="toggleSidebar()">⟨</button>
+    <!-- REGISTER / LOGIN -->
+    <div class="auth-box" id="authBox">
+      <input id="regUser" placeholder="New Analyst ID">
+      <input id="regPass" type="password" placeholder="Password">
+      <button id="registerBtn">Register</button>
+      <hr>
+      <input id="loginUser" placeholder="Analyst ID">
+      <input id="loginPass" type="password" placeholder="Password">
+      <button id="loginBtn">Login</button>
+    </div>
   </aside>
 
-  <!-- MAIN -->
+  <!-- MAIN AREA -->
   <main class="main">
-
-    <!-- AUTH -->
-    <div id="authBox" class="auth-box">
-      <input id="loginUser" placeholder="Analyst ID" />
-      <input id="loginPass" type="password" placeholder="Password" />
-      <button onclick="login()">Login</button>
-    </div>
-
-    <!-- SEARCH -->
     <div class="search-bar">
-      <input id="searchInput" placeholder="Target username…" />
+      <input id="searchInput" placeholder="Target username…">
       <select id="platformFilter">
         <option value="all">All Platforms</option>
+        <option value="github">GitHub</option>
         <option value="twitter">Twitter</option>
         <option value="instagram">Instagram</option>
-        <option value="github">GitHub</option>
       </select>
       <button id="searchBtn">Run OSINT Check</button>
     </div>
 
     <div id="status" class="status"></div>
     <div id="results" class="results"></div>
-
-    <footer>
-      © OSINT MVP · Analyst View · Internal Use Only
-    </footer>
-
+    <footer>© OSINT MVP · Analyst View · Internal Use Only</footer>
   </main>
+
 </div>
 
 <script>
-function toggleSidebar() {
-  document.getElementById("sidebar").classList.toggle("collapsed");
+async function register(){
+  const username=regUser.value.trim();
+  const password=regPass.value.trim();
+  if(!username||!password){status.innerText="Enter credentials";return;}
+  const res=await fetch("/api/auth/register",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username,password})});
+  const data=await res.json();
+  if(!res.ok){status.innerText=data.error||"Registration failed";return;}
+  status.innerText="Registered successfully, you can login now";
 }
 
-async function login() {
-  const username = document.getElementById("loginUser").value;
-  const password = document.getElementById("loginPass").value;
-
-  const res = await fetch("/api/auth/login", {
-    method: "POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({ username, password })
-  });
-
-  const data = await res.json();
-  if (data.token) {
-    localStorage.setItem("token", data.token);
-    document.getElementById("authBox").style.display = "none";
-  } else {
-    alert("Login failed");
-  }
+async function login(){
+  const username=loginUser.value.trim();
+  const password=loginPass.value.trim();
+  if(!username||!password){status.innerText="Enter credentials";return;}
+  const res=await fetch("/api/auth/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username,password})});
+  const data=await res.json();
+  if(!res.ok||!data.token){status.innerText=data.error||"Login failed";return;}
+  localStorage.setItem("token",data.token);
+  authBox.style.display="none";
+  status.innerText="Logged in";
 }
 
-document.getElementById("searchBtn").onclick = async () => {
-  const token = localStorage.getItem("token");
-  if (!token) {
-    alert("Please login first");
-    return;
-  }
+registerBtn.onclick=register;
+loginBtn.onclick=login;
 
-  const username = document.getElementById("searchInput").value.trim();
-  if (!username) return;
-
-  document.getElementById("status").innerText = "Running intelligence checks…";
-  document.getElementById("results").innerHTML = "";
-
-  const res = await fetch("/api/check", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": token
-    },
-    body: JSON.stringify({ username })
+searchBtn.onclick=async()=>{
+  const token=localStorage.getItem("token");
+  if(!token){alert("Please login first");return;}
+  const username=searchInput.value.trim();
+  const platform=platformFilter.value;
+  if(!username){status.innerText="Enter username";return;}
+  status.innerText="Running intelligence checks…";
+  results.innerHTML="";
+  const res=await fetch("/api/check",{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({username,platform})});
+  if(!res.ok){status.innerText=`Backend error (${res.status})`;return;}
+  const data=await res.json();
+  status.innerText="";
+  (data.profiles||[]).forEach(p=>{
+    const card=document.createElement("div");
+    card.className="card";
+    card.innerHTML=`<h3>${p.platform.toUpperCase()}</h3><p>${p.username}</p><a href="${p.url}" target="_blank">Open profile</a><span class="risk risk-${p.nlp.risk}">${p.nlp.risk}</span>`;
+    results.appendChild(card);
   });
-
-  const data = await res.json();
-  document.getElementById("status").innerText = "";
-
-  const profiles = data.profiles || [];
-  if (!profiles.length) {
-    document.getElementById("status").innerText = "No profiles found.";
-    return;
-  }
-
-  const fragment = document.createDocumentFragment();
-
-  profiles.forEach(p => {
-    const card = document.createElement("div");
-    card.className = "card";
-    card.innerHTML = `
-      <div class="card-head">
-        <span class="platform">${p.platform.toUpperCase()}</span>
-        <span class="risk risk-${p.nlp.risk}">${p.nlp.risk.toUpperCase()}</span>
-      </div>
-      <div class="username">${p.username}</div>
-      <a href="${p.url}" target="_blank">Open profile</a>
-    `;
-    fragment.appendChild(card);
-  });
-
-  document.getElementById("results").appendChild(fragment);
 };
 </script>
-
 </body>
 </html>

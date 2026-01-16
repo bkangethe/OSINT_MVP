@@ -1,89 +1,32 @@
-from flask import Flask, render_template, request, jsonify
-from flask_cors import CORS
-import jwt
-import datetime
+from flask import Flask, render_template
+from extensions import db
+from auth import auth_bp
+from routes.check import check_bp
 import os
 
-app = Flask(__name__)
-CORS(app)
+# Absolute paths
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# ===== CONFIG =====
-SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret")
-app.config["SECRET_KEY"] = SECRET_KEY
+app = Flask(
+    __name__,
+    template_folder=os.path.join(BASE_DIR, "templates"),
+    static_folder=os.path.join(BASE_DIR, "static")
+)
 
-# ===== MOCK USER (SAFE MVP) =====
-USERS = {
-    "brian": {
-        "password": "admin123",
-        "role": "analyst"
-    }
-}
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db.sqlite3"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["SECRET_KEY"] = "dev"
 
-# ===== ROUTES =====
+db.init_app(app)
+
+app.register_blueprint(auth_bp, url_prefix="/api/auth")
+app.register_blueprint(check_bp, url_prefix="/api")
+
 @app.route("/")
 def index():
     return render_template("index.html")
 
-
-@app.route("/api/auth/login", methods=["POST"])
-def login():
-    data = request.get_json()
-    user = USERS.get(data.get("username"))
-
-    if not user or user["password"] != data.get("password"):
-        return jsonify({"error": "Invalid credentials"}), 401
-
-    token = jwt.encode(
-        {
-            "user": data["username"],
-            "role": user["role"],
-            "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=6)
-        },
-        SECRET_KEY,
-        algorithm="HS256"
-    )
-
-    return jsonify({"token": token})
-
-
-@app.route("/api/check", methods=["POST"])
-def osint_check():
-    token = request.headers.get("Authorization")
-
-    if not token:
-        return jsonify({"error": "Unauthorized"}), 401
-
-    try:
-        jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-    except jwt.ExpiredSignatureError:
-        return jsonify({"error": "Token expired"}), 401
-    except Exception:
-        return jsonify({"error": "Invalid token"}), 401
-
-    data = request.get_json()
-    username = data.get("username")
-
-    if not username:
-        return jsonify({"profiles": []})
-
-    # SAFE MOCK RESULTS (NO SCRAPING)
-    profiles = [
-        {
-            "platform": "twitter",
-            "username": username,
-            "url": f"https://twitter.com/{username}",
-            "nlp": {"risk": "low"}
-        },
-        {
-            "platform": "github",
-            "username": username,
-            "url": f"https://github.com/{username}",
-            "nlp": {"risk": "low"}
-        }
-    ]
-
-    return jsonify({"profiles": profiles})
-
-
 if __name__ == "__main__":
+    with app.app_context():
+        db.create_all()
     app.run(debug=True)

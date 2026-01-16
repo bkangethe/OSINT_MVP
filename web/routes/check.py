@@ -7,20 +7,21 @@ check_bp = Blueprint("check", __name__)
 @token_required
 def check_username():
     data = request.json
+
     username = data.get("username")
-    platform = data.get("platform","all")
+    platform = data.get("platform", "all")
 
     if not username:
-        return jsonify({"error":"Username required"}),400
+        return jsonify({"error": "Username required"}), 400
 
-    # MOCK response for testing
+    # TEMP MOCK RESPONSE — confirms auth + frontend flow
     return jsonify({
-        "profiles":[
+        "profiles": [
             {
-                "platform": platform,
+                "platform": "github",
                 "username": username,
-                "url": f"https://{platform}.com/{username}",
-                "nlp": {"risk":"low"}
+                "url": f"https://github.com/{username}",
+                "nlp": {"risk": "low"}
             }
         ]
     })

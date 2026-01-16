@@ -1,73 +1,14 @@
-body {
-  margin: 0;
-  background: #0b0f14;
-  color: #e5e7eb;
-  font-family: Inter, system-ui, sans-serif;
-}
+from extensions import db
+from werkzeug.security import generate_password_hash, check_password_hash
 
-.app {
-  display: flex;
-  height: 100vh;
-}
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    password_hash = db.Column(db.String(128))
+    role = db.Column(db.String(20), default="analyst")
 
-.sidebar {
-  width: 260px;
-  background: #020617;
-  padding: 20px;
-  border-right: 1px solid #1f2933;
-}
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
 
-.logo {
-  width: 48px;
-  margin-bottom: 10px;
-}
-
-.tagline {
-  font-size: 13px;
-  color: #94a3b8;
-}
-
-.main {
-  flex: 1;
-  padding: 24px;
-}
-
-.search-bar {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-input, select, button {
-  background: #020617;
-  border: 1px solid #1f2933;
-  color: white;
-  padding: 10px;
-  border-radius: 6px;
-}
-
-button {
-  background: #2563eb;
-  border: none;
-}
-
-.results {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 16px;
-}
-
-.card {
-  background: #020617;
-  border: 1px solid #1f2933;
-  border-radius: 10px;
-  padding: 14px;
-}
-
-.risk {
-  display: inline-block;
-  margin-top: 8px;
-  font-size: 12px;
-}
-
-.risk-low { color: #22c55e; }
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
