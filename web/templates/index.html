@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>OSINT Intelligence Platform</title>
-<link rel="stylesheet" href="/static/styles.css" />
+  <meta charset="UTF-8" />
+  <title>OSINT Intelligence Platform</title>
+  <link rel="stylesheet" href="/static/styles.css" />
 </head>
 
 <body>
@@ -11,10 +11,20 @@
 <div class="app">
 
   <!-- SIDEBAR -->
-  <aside class="sidebar">
-    <img src="/static/logo.png" class="logo" />
-    <h1>OSINT</h1>
-    <p class="tagline">The quieter you are,<br>the more you hear</p>
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="logo-bg">
+        <img src="/static/logo.png" class="logo" alt="OSINT Logo" />
+      </div>
+      <span class="brand-text">OSINT</span>
+    </div>
+
+    <p class="tagline">
+      The quieter you are,<br>
+      the more you hear
+    </p>
+
+    <button class="collapse-btn" onclick="toggleSidebar()">⟨</button>
   </aside>
 
   <!-- MAIN -->
@@ -50,6 +60,10 @@
 </div>
 
 <script>
+function toggleSidebar() {
+  document.getElementById("sidebar").classList.toggle("collapsed");
+}
+
 async function login() {
   const username = document.getElementById("loginUser").value;
   const password = document.getElementById("loginPass").value;
@@ -95,23 +109,28 @@ document.getElementById("searchBtn").onclick = async () => {
   document.getElementById("status").innerText = "";
 
   const profiles = data.profiles || [];
-
-  if (profiles.length === 0) {
+  if (!profiles.length) {
     document.getElementById("status").innerText = "No profiles found.";
     return;
   }
+
+  const fragment = document.createDocumentFragment();
 
   profiles.forEach(p => {
     const card = document.createElement("div");
     card.className = "card";
     card.innerHTML = `
-      <h3>${p.platform.toUpperCase()}</h3>
-      <p>${p.username}</p>
+      <div class="card-head">
+        <span class="platform">${p.platform.toUpperCase()}</span>
+        <span class="risk risk-${p.nlp.risk}">${p.nlp.risk.toUpperCase()}</span>
+      </div>
+      <div class="username">${p.username}</div>
       <a href="${p.url}" target="_blank">Open profile</a>
-      <span class="risk risk-${p.nlp.risk}">${p.nlp.risk.toUpperCase()}</span>
     `;
-    document.getElementById("results").appendChild(card);
+    fragment.appendChild(card);
   });
+
+  document.getElementById("results").appendChild(fragment);
 };
 </script>
 
