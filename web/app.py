@@ -1,40 +1,89 @@
 from flask import Flask, render_template, request, jsonify
-from models import db
-from auth import auth_bp
-from osint import basic_lookup
+from flask_cors import CORS
+import jwt
+import datetime
 import os
 
 app = Flask(__name__)
+CORS(app)
 
-# CONFIG
-app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev")
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+# ===== CONFIG =====
+SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret")
+app.config["SECRET_KEY"] = SECRET_KEY
 
-db.init_app(app)
+# ===== MOCK USER (SAFE MVP) =====
+USERS = {
+    "brian": {
+        "password": "admin123",
+        "role": "analyst"
+    }
+}
 
-with app.app_context():
-    db.create_all()
-
-# AUTH
-app.register_blueprint(auth_bp, url_prefix="/api/auth")
-
-# FRONTEND
+# ===== ROUTES =====
 @app.route("/")
 def index():
     return render_template("index.html")
 
-# API
+
+@app.route("/api/auth/login", methods=["POST"])
+def login():
+    data = request.get_json()
+    user = USERS.get(data.get("username"))
+
+    if not user or user["password"] != data.get("password"):
+        return jsonify({"error": "Invalid credentials"}), 401
+
+    token = jwt.encode(
+        {
+            "user": data["username"],
+            "role": user["role"],
+            "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=6)
+        },
+        SECRET_KEY,
+        algorithm="HS256"
+    )
+
+    return jsonify({"token": token})
+
+
 @app.route("/api/check", methods=["POST"])
-def check_user():
-    data = request.json or {}
+def osint_check():
+    token = request.headers.get("Authorization")
+
+    if not token:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    try:
+        jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+    except jwt.ExpiredSignatureError:
+        return jsonify({"error": "Token expired"}), 401
+    except Exception:
+        return jsonify({"error": "Invalid token"}), 401
+
+    data = request.get_json()
     username = data.get("username")
 
     if not username:
-        return jsonify({"error": "username missing"}), 400
+        return jsonify({"profiles": []})
 
-    results = basic_lookup(username)
-    return jsonify(results)
+    # SAFE MOCK RESULTS (NO SCRAPING)
+    profiles = [
+        {
+            "platform": "twitter",
+            "username": username,
+            "url": f"https://twitter.com/{username}",
+            "nlp": {"risk": "low"}
+        },
+        {
+            "platform": "github",
+            "username": username,
+            "url": f"https://github.com/{username}",
+            "nlp": {"risk": "low"}
+        }
+    ]
+
+    return jsonify({"profiles": profiles})
+
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    app.run(debug=True)

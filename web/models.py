@@ -1,8 +1,73 @@
-from flask_sqlalchemy import SQLAlchemy
+body {
+  margin: 0;
+  background: #0b0f14;
+  color: #e5e7eb;
+  font-family: Inter, system-ui, sans-serif;
+}
 
-db = SQLAlchemy()
+.app {
+  display: flex;
+  height: 100vh;
+}
 
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True)
-    password = db.Column(db.String(200))
+.sidebar {
+  width: 260px;
+  background: #020617;
+  padding: 20px;
+  border-right: 1px solid #1f2933;
+}
+
+.logo {
+  width: 48px;
+  margin-bottom: 10px;
+}
+
+.tagline {
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+.main {
+  flex: 1;
+  padding: 24px;
+}
+
+.search-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+input, select, button {
+  background: #020617;
+  border: 1px solid #1f2933;
+  color: white;
+  padding: 10px;
+  border-radius: 6px;
+}
+
+button {
+  background: #2563eb;
+  border: none;
+}
+
+.results {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.card {
+  background: #020617;
+  border: 1px solid #1f2933;
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.risk {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 12px;
+}
+
+.risk-low { color: #22c55e; }

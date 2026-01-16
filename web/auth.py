@@ -1,33 +1,35 @@
 from flask import Blueprint, request, jsonify
-from werkzeug.security import generate_password_hash, check_password_hash
-import jwt, datetime, os
 from models import db, User
+import jwt, datetime, os
 
 auth_bp = Blueprint("auth", __name__)
 
 SECRET = os.environ.get("SECRET_KEY", "dev")
 
-@auth_bp.route("/api/register", methods=["POST"])
+@auth_bp.route("/register", methods=["POST"])
 def register():
     data = request.json
-    user = User(
-        username=data["username"],
-        password=generate_password_hash(data["password"])
-    )
+    if User.query.filter_by(username=data["username"]).first():
+        return jsonify({"error": "User exists"}), 400
+
+    user = User(username=data["username"])
+    user.set_password(data["password"])
     db.session.add(user)
     db.session.commit()
-    return jsonify({"status": "registered"})
+    return jsonify({"message": "User created"})
 
-@auth_bp.route("/api/login", methods=["POST"])
+@auth_bp.route("/login", methods=["POST"])
 def login():
     data = request.json
     user = User.query.filter_by(username=data["username"]).first()
-    if not user or not check_password_hash(user.password, data["password"]):
+
+    if not user or not user.check_password(data["password"]):
         return jsonify({"error": "Invalid credentials"}), 401
 
     token = jwt.encode({
         "user": user.username,
-        "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=12)
+        "role": user.role,
+        "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=8)
     }, SECRET, algorithm="HS256")
 
     return jsonify({"token": token})

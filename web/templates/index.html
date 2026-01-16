@@ -1,72 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>OSINT Intelligence Dashboard</title>
-<link rel="stylesheet" href="/static/styles.css">
+<meta charset="UTF-8" />
+<title>OSINT Intelligence Platform</title>
+<link rel="stylesheet" href="/static/styles.css" />
 </head>
 
 <body>
 
 <div class="app">
 
+  <!-- SIDEBAR -->
   <aside class="sidebar">
-    <img src="/static/logo.png" class="logo">
-    <h2>OSINT</h2>
+    <img src="/static/logo.png" class="logo" />
+    <h1>OSINT</h1>
     <p class="tagline">The quieter you are,<br>the more you hear</p>
   </aside>
 
+  <!-- MAIN -->
   <main class="main">
 
+    <!-- AUTH -->
+    <div id="authBox" class="auth-box">
+      <input id="loginUser" placeholder="Analyst ID" />
+      <input id="loginPass" type="password" placeholder="Password" />
+      <button onclick="login()">Login</button>
+    </div>
+
+    <!-- SEARCH -->
     <div class="search-bar">
-      <input id="searchInput" placeholder="Enter username…" />
+      <input id="searchInput" placeholder="Target username…" />
       <select id="platformFilter">
         <option value="all">All Platforms</option>
         <option value="twitter">Twitter</option>
         <option value="instagram">Instagram</option>
         <option value="github">GitHub</option>
       </select>
-      <button id="searchBtn">Run Check</button>
+      <button id="searchBtn">Run OSINT Check</button>
     </div>
 
     <div id="status" class="status"></div>
     <div id="results" class="results"></div>
 
-  </main>
+    <footer>
+      © OSINT MVP · Analyst View · Internal Use Only
+    </footer>
 
+  </main>
 </div>
 
 <script>
-const searchBtn = document.getElementById("searchBtn");
-const searchInput = document.getElementById("searchInput");
-const platformFilter = document.getElementById("platformFilter");
-const results = document.getElementById("results");
-const status = document.getElementById("status");
+async function login() {
+  const username = document.getElementById("loginUser").value;
+  const password = document.getElementById("loginPass").value;
 
-searchBtn.onclick = async () => {
-  const username = searchInput.value.trim();
+  const res = await fetch("/api/auth/login", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({ username, password })
+  });
+
+  const data = await res.json();
+  if (data.token) {
+    localStorage.setItem("token", data.token);
+    document.getElementById("authBox").style.display = "none";
+  } else {
+    alert("Login failed");
+  }
+}
+
+document.getElementById("searchBtn").onclick = async () => {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    alert("Please login first");
+    return;
+  }
+
+  const username = document.getElementById("searchInput").value.trim();
   if (!username) return;
 
-  status.innerText = "Running intelligence checks…";
-  results.innerHTML = "";
+  document.getElementById("status").innerText = "Running intelligence checks…";
+  document.getElementById("results").innerHTML = "";
 
   const res = await fetch("/api/check", {
     method: "POST",
-    headers: {"Content-Type": "application/json"},
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": token
+    },
     body: JSON.stringify({ username })
   });
 
   const data = await res.json();
-  status.innerText = "";
+  document.getElementById("status").innerText = "";
 
-  let profiles = data.profiles || [];
-
-  if (platformFilter.value !== "all") {
-    profiles = profiles.filter(p => p.platform === platformFilter.value);
-  }
+  const profiles = data.profiles || [];
 
   if (profiles.length === 0) {
-    status.innerText = "No profiles found.";
+    document.getElementById("status").innerText = "No profiles found.";
     return;
   }
 
@@ -79,7 +110,7 @@ searchBtn.onclick = async () => {
       <a href="${p.url}" target="_blank">Open profile</a>
       <span class="risk risk-${p.nlp.risk}">${p.nlp.risk.toUpperCase()}</span>
     `;
-    results.appendChild(card);
+    document.getElementById("results").appendChild(card);
   });
 };
 </script>
