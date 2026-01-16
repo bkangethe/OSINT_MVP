@@ -1,17 +1,26 @@
-import requests
-import os
+from analysis.nlp import analyze_text
+from analysis.llm_summary import generate_summary
+
+PLATFORMS = {
+    "github": "https://github.com/{}",
+    "twitter": "https://twitter.com/{}",
+    "instagram": "https://instagram.com/{}"
+}
 
 def basic_lookup(username):
-    """
-    Sends a request to the worker service which runs ML/NLP/vision.
-    Returns JSON results.
-    """
-    worker_url = os.environ.get("WORKER_URL")
-    if not worker_url:
-        return {"error": "WORKER_URL not set"}
+    profiles = []
 
-    try:
-        r = requests.post(f"{worker_url}/analyze", json={"username": username}, timeout=20)
-        return r.json()
-    except Exception as e:
-        return {"error": str(e)}
+    for platform, url in PLATFORMS.items():
+        profiles.append({
+            "platform": platform,
+            "username": username,
+            "url": url.format(username),
+            "nlp": analyze_text(username)
+        })
+
+    summary = generate_summary(profiles)
+
+    return {
+        "profiles": profiles,
+        "summary": summary
+    }
