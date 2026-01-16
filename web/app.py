@@ -4,8 +4,7 @@ import jwt
 import datetime
 import os
 
-app = Flask(__name__)
-CORS(app)
+
 
 # ===== CONFIG =====
 SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret")
