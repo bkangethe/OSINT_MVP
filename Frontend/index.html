@@ -1,33 +1,112 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>OSINT Dashboard</title>
-<link rel="stylesheet" href="style.css">
+<script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-<header>
-  <h1>The quieter you are, the more you hear</h1>
+<body class="bg-gray-100 text-gray-900">
+
+<!-- Header -->
+<header class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-6 shadow-md">
+  <h1 class="text-3xl font-bold italic text-center tracking-wide">
+    The quieter
+  </h1>
 </header>
 
-<main>
-  <section id="search-panel">
-    <input type="text" id="searchInput" placeholder="Enter username or name...">
-    <select id="platformFilter">
+<main class="max-w-7xl mx-auto p-6 space-y-6">
+
+  <!-- Search Panel -->
+  <section id="search-panel" class="bg-white p-6 rounded-xl shadow-md flex flex-col md:flex-row gap-4 items-center">
+    <input
+      type="text"
+      id="searchInput"
+      placeholder="Enter username or name..."
+      aria-label="Search username or name"
+      class="flex-1 border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition"
+    >
+
+    <select
+      id="platformFilter"
+      aria-label="Select platform"
+      class="border rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-400 transition"
+    >
       <option value="all">All Platforms</option>
       <option value="github">GitHub</option>
-      <option value="twitter">Twitter</option>
+      <option value="twitter">Twitter / X</option>
       <option value="linkedin">LinkedIn</option>
       <option value="instagram">Instagram</option>
     </select>
-    <button id="searchBtn">Search</button>
+
+    <button
+      id="searchBtn"
+      class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-all font-medium"
+      aria-label="Search"
+    >
+      Search
+    </button>
   </section>
 
-  <section id="results" class="grid-container"></section>
-  <div id="pagination" class="progress"></div>
+  <!-- Results Grid -->
+  <section id="results" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
+    <!-- Profile Card -->
+    <div class="bg-white p-6 rounded-xl shadow hover:shadow-xl transform hover:-translate-y-1 transition-all border border-gray-200 flex flex-col justify-between min-h-[220px]">
+      <div class="flex justify-between items-center">
+        <span class="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full font-semibold">
+          Twitter / X
+        </span>
+        <!-- <span class="text-green-600 text-sm font-medium">✔ Found</span> -->
+      </div>
+
+      <div>
+        <h3 class="font-bold text-xl mt-4">@username</h3>
+        <p class="text-gray-600 mt-2 text-sm">
+          Full name or description of the user goes here.
+        </p>
+      </div>
+
+      <a href="#" class="text-indigo-600 text-sm mt-4 inline-block font-medium hover:underline">
+        View Profile →
+      </a>
+    </div>
+
+    <!-- Post Card -->
+    <div class="bg-white p-6 rounded-xl shadow hover:shadow-xl transform hover:-translate-y-1 transition-all border border-gray-200 flex flex-col justify-between min-h-[220px]">
+      <div class="flex justify-between text-xs text-gray-500 mb-2">
+        <span class="font-semibold text-gray-700">@username</span>
+        <span>2026-01-19</span>
+      </div>
+
+      <p class="mt-2 text-gray-800 text-sm leading-relaxed border-l-4 border-green-500 pl-3">
+        Tweet:This area can include highlights or NLP analysis.
+      </p>
+
+      <div class="mt-4 flex flex-wrap gap-2 text-xs">
+        <span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full">
+          NLP: Neutral
+        </span>
+        <span class="px-2 py-1 bg-green-100 text-green-700 rounded-full">
+          Likes: 2
+        </span>
+      </div>
+
+      <a href="#" class="text-indigo-600 text-sm mt-3 inline-block font-medium hover:underline">
+        View Post →
+      </a>
+    </div>
+
+  </section>
+
+  <!-- Pagination -->
+  <div id="pagination" class="text-center text-sm text-gray-500">
+    Page 1 of 1
+  </div>
+
 </main>
 
-<script src="app.js"></script>
+<script src="{% static 'app.js'%}"></script>
 </body>
 </html>

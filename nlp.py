@@ -1,27 +1,44 @@
-classifier = None
+from transformers import pipeline, AutoTokenizer, AutoModelForMaskedLM, AutoModelForSequenceClassification, pipeline
 
-def analyze_text(text, lang="en"):
+path = 'afri_trained_full'
+
+# Load tokenizer
+tokenizer = AutoTokenizer.from_pretrained(path, local_files_only=True)
+
+# Load model
+model = AutoModelForSequenceClassification.from_pretrained(path, local_files_only=True,
+                            id2label={0: "Normal", 1: "Hate", 2: "Abuse"},
+                            label2id={"Normal":0, "Hate":1, "Abuse":2}
+                            )
+
+
+classifier = pipeline(
+    "text-classification",
+    model=model,
+    tokenizer=tokenizer,
+    return_all_scores=False
+)
+
+def analyze_text(text):
     """
-    Returns risk label and score for a given text.
-    Supports Swahili, Sheng’, Somali phrases via multi-language model.
+    Classifies text into Normal, Hate, or Abuse
     """
-    global classifier
-    if classifier is None:
-        from transformers import pipeline
-        classifier = pipeline(
-            "text-classification",
-            model="joeddav/xlm-roberta-large-xnli"
-        )
-    try:
-        results = classifier(text)
-        label = results[0]["label"]
-        score = float(results[0]["score"])
-        if "CONTRADICTORY" in label or "EXTREME" in label:
-            risk = "high"
-        elif "NEUTRAL" in label:
-            risk = "low"
-        else:
-            risk = "medium"
-        return {"label": label, "score": score, "risk": risk}
-    except Exception:
-        return {"label": "unknown", "score": 0, "risk": "low"}
+    result = classifier(text)[0]
+
+    label = result["label"]
+    score = float(result["score"])
+
+    # Risk mapping based on YOUR labels
+    if label == "Hate":
+        risk = "high"
+    elif label == "Abuse":
+        risk = "medium"
+    else:
+        risk = "low"
+
+    return {
+        "label": label,
+        "score": round(score, 4),
+        "risk": risk
+    }
+
