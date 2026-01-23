@@ -22,8 +22,8 @@ searchBtn.addEventListener("click", async () => {
       body: JSON.stringify({ username })
     });
 
-    const data = await response.json();
-    console.log(data.data)
+    const data = await response.json().data;
+    console.log(data);
 
     const platform = platformFilter.value;
 
