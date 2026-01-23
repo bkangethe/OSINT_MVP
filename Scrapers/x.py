@@ -23,11 +23,14 @@ def get_user(username):
 
     r = requests.get(url, headers=HEADERS, params=params)
 
-    if r.status_code == 404:
-        return None  
-
-    r.raise_for_status()
+    # if r.status_code == 404:
+    #     return None  
+    
+    if r.status_code != 200:
+        return {"error": "RATE_LIMIT"}
+    
     return r.json()["data"]
+
 
 
 def get_recent_tweets_by_user_id(user_id, max_results=10):
@@ -53,13 +56,17 @@ def search_x(username, max_results=20):
     }
 
     user = get_user(username)
-    if not user:
+    if user.get("error"):
         return results
 
     results["people"].append(user)
 
     try:
         tweets_response = get_recent_tweets_by_user_id(user["id"], max_results)
+
+        if not tweets_response.get("data"):
+            return results
+        
         tweets = tweets_response.get("data", [])
 
         for tweet in tweets:
@@ -78,9 +85,11 @@ def search_x(username, max_results=20):
         return results
 
     except Exception as e:
-        results["error"].append({
-            "text":str(e)
-        })
-        print(results)
+        results = {
+            "keyword": username,
+            "people": [],
+            "tweets": [],
+            "error": str(e),
+        }
         return results
     

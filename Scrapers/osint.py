@@ -30,7 +30,6 @@ def basic_lookup(target):
 
     # Instagram multi-results
     ig_data = search_instagram(target)
-    print(ig_data)
 
     if not bool(ig_data.get("error",[])):
         ig_profile = ig_data.get("profile")[0]
@@ -74,6 +73,7 @@ def basic_lookup(target):
 
     # x ddata
     x_data = X_.search_x(target)
+    print(x_data)
 
     if x_data and not x_data.get("error"):
         for person in x_data.get("people", []):
@@ -82,7 +82,7 @@ def basic_lookup(target):
                 continue
 
             results["profiles"].append({
-                "platform": "x/twitter",
+                "platform": "twitter",
                 "username": username,
                 "display_name": person.get("name"),
                 "url": f"https://twitter.com/{username}",
@@ -97,7 +97,7 @@ def basic_lookup(target):
 
         for tweet in x_data.get("tweets", []):
             results["posts"].append({
-                "platform": "x/twitter",
+                "platform": "twitter",
                 "post_type": "tweet",
                 "url": f"https://twitter.com/i/web/status/{tweet.get('id')}",
                 "text": tweet.get("text"),
@@ -106,6 +106,7 @@ def basic_lookup(target):
                 "nlp": tweet.get("analysis"),
                 "risk": tweet.get("analysis", {}).get("risk"),
             })
+            
 
     print(results)
     return results
