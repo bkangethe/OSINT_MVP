@@ -1,7 +1,7 @@
 import requests
 import time
 from datetime import datetime
-# from nlp_ import analyze_text
+# from .nlp_ import analyze_text
 
 BASE_URL = "https://facebook-scraper3.p.rapidapi.com/"
 DELAY = 1.5

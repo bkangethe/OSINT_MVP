@@ -25,7 +25,8 @@ SECRET_KEY = 'django-insecure-#8#6m7s2-scri$ms(h5go#cjezw=ws3m-(wkcodry6-aj*b4td
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
+CSRF_TRUSTED_ORIGINS = ['http://*']
 
 
 # Application definition
@@ -100,10 +101,11 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
-    ]
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.TokenAuthentication",
+    ],
 }
+
 
 
 # Internationalization

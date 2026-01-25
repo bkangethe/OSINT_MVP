@@ -58,7 +58,7 @@
 # print(search_instagram())
 
 import instaloader
-from nlp import analyze_text
+from .nlp_ import analyze_text
 
 # L = instaloader.Instaloader()
 # USERNAME = "to.uchee"

@@ -3,6 +3,7 @@ from Scrapers import facebook, x as X_
 from Scrapers.instagram import search_instagram
 import requests
 
+
 def basic_lookup(target):
     results = {"target": target, "checks": {}, "profiles": [],"posts": []}
 
