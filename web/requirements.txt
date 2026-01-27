@@ -1,8 +1,6 @@
-flask
-gunicorn
-requests
-flask_sqlalchemy
-psycopg2-binary
-pyjwt
-networkx
-flask_cors
+Flask==3.1.2
+Flask_SQLAlchemy==3.1.1
+psycopg2-binary==2.9.11
+PyJWT==2.10.1
+Flask-Cors==4.0.0
+reportlab==4.0.0

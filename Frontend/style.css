@@ -1,212 +1,49 @@
-/* ===== Base ===== */
+body.dark {
+  background: #0b0f18;
+  color: #fff;
+  font-family: Arial, sans-serif;
+}
 
-body {
-    margin: 0;
-    background: #05070d;
-    color: #e5e7eb;
-    font-family: Inter, system-ui, sans-serif;
-  }
-  
-  .app {
-    display: flex;
-    min-height: 100vh;
-  }
-  
-  /* ===== Sidebar ===== */
-  
-  .sidebar {
-    width: 260px;
-    padding: 20px;
-    background:
-      radial-gradient(circle at top left, rgba(255,255,255,0.03), transparent 60%),
-      linear-gradient(180deg, #020617, #05070d);
-    border-right: 1px solid #1f2933;
-    transition: width 0.25s ease;
-    position: relative;
-  }
-  
-  .sidebar.collapsed {
-    width: 72px;
-  }
-  
-  .sidebar.collapsed .brand-text,
-  .sidebar.collapsed .tagline {
-    display: none;
-  }
-  
-  /* Brand */
-  
-  .brand {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  
-  .logo-bg {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(255,255,255,0.04), transparent 70%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .logo {
-    width: 28px;
-    height: 28px;
-    opacity: 0.6;
-    filter: grayscale(60%) contrast(85%);
-    mix-blend-mode: luminosity;
-  }
-  
-  .brand-text {
-    font-size: 1.35rem;
-    font-weight: 600;
-    letter-spacing: 1px;
-  }
-  
-  /* Tagline */
-  
-  .tagline {
-    margin-top: 6px;
-    font-size: 0.75rem;
-    color: #94a3b8;
-    opacity: 0.7;
-  }
-  
-  /* Collapse Button */
-  
-  .collapse-btn {
-    position: absolute;
-    top: 14px;
-    right: -14px;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: #020617;
-    border: 1px solid #1f2933;
-    color: #94a3b8;
-    cursor: pointer;
-  }
-  
-  /* ===== Main ===== */
-  
-  .main {
-    flex: 1;
-    padding: 22px;
-  }
-  
-  /* ===== Auth ===== */
-  
-  .auth-box {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 14px;
-  }
-  
-  /* ===== Search ===== */
-  
-  .search-bar {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 16px;
-  }
-  
-  /* ===== Inputs ===== */
-  
-  input, select, button {
-    background: #020617;
-    border: 1px solid #1f2933;
-    color: #e5e7eb;
-    padding: 9px;
-    border-radius: 6px;
-  }
-  
-  input::placeholder {
-    color: #64748b;
-  }
-  
-  button {
-    background: #2563eb;
-    border: none;
-    cursor: pointer;
-  }
-  
-  button:hover {
-    background: #1d4ed8;
-  }
-  
-  /* ===== Status ===== */
-  
-  .status {
-    font-size: 0.8rem;
-    color: #94a3b8;
-    margin-bottom: 10px;
-  }
-  
-  /* ===== Results ===== */
-  
-  .results {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 12px;
-  }
-  
-  /* ===== Cards ===== */
-  
-  .card {
-    background: #020617;
-    border: 1px solid #1f2933;
-    border-radius: 8px;
-    padding: 10px;
-    font-size: 0.75rem;
-    animation: fadeIn 0.25s ease;
-  }
-  
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(2px); }
-    to { opacity: 1; transform: none; }
-  }
-  
-  .card-head {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 6px;
-  }
-  
-  .platform {
-    letter-spacing: 0.5px;
-    opacity: 0.8;
-  }
-  
-  .username {
-    font-size: 0.85rem;
-    margin-bottom: 6px;
-    color: #cbd5f5;
-  }
-  
-  .card a {
-    font-size: 0.7rem;
-    color: #60a5fa;
-    text-decoration: none;
-  }
-  
-  /* ===== Risk ===== */
-  
-  .risk {
-    font-size: 0.65rem;
-  }
-  
-  .risk-low { color: #22c55e; }
-  .risk-medium { color: #facc15; }
-  .risk-high { color: #ef4444; }
-  
-  /* ===== Footer===== */
-  
-  footer {
-    margin-top: 20px;
-    font-size: 0.7rem;
-    color: #64748b;
-  }
-  
+.top {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+}
+
+.logo {
+  width: 80px;
+  height: auto;
+}
+
+.title h1 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  padding: 20px;
+}
+
+.card {
+  background: #141b2e;
+  border-radius: 10px;
+  padding: 15px;
+  margin: 10px 0;
+}
+
+.badge {
+  padding: 5px 10px;
+  border-radius: 5px;
+  color: #fff;
+}
+.badge-low { background: #2d9cdb; }
+.badge-high { background: #e74c3c; }
+
+footer {
+  padding: 20px;
+  text-align: center;
+  opacity: 0.6;
+}

@@ -1,119 +1,29 @@
-body{
-  margin:0;
-  font-family:Inter,sans-serif;
-  background:#05070d;
-  color:#e5e7eb;
-  display:flex;
-  min-height:100vh;
+body {
+  background:#0b0f14;
+  color:#e0e0e0;
+  font-family: Arial, sans-serif;
 }
 
-.app{
-  display:flex;
-  flex:1;
+.logo {
+  height:60px;
 }
 
-.sidebar{
-  width:260px;
-  background:linear-gradient(180deg,#020617,#05070d);
-  padding:24px;
-  border-right:1px solid #1f2933;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-}
-
-.logo-container{
-  width:100%;
+header {
   text-align:center;
-  margin-bottom:12px;
+  padding:20px;
 }
 
-.logo{
-  width:64px;
-  opacity:0.9;
-  border-radius:12px;
-}
-
-h1{
-  margin:8px 0;
-  font-size:24px;
-}
-
-.tagline{
-  font-size:13px;
-  color:#94a3b8;
-  text-align:center;
-  margin-bottom:16px;
-}
-
-.auth-box{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-  width:100%;
-}
-
-.auth-box input, .auth-box button{
-  padding:10px;
-  border-radius:6px;
-  border:1px solid #1f2933;
-  background:#020617;
-  color:#e5e7eb;
-}
-
-.auth-box button{
-  background:#2563eb;
+button {
+  background:#1f6feb;
+  color:white;
   border:none;
+  padding:10px 20px;
   cursor:pointer;
 }
 
-.main{
-  flex:1;
-  padding:24px;
-  display:flex;
-  flex-direction:column;
-}
-
-.search-bar{
-  display:flex;
-  gap:12px;
-  margin-bottom:20px;
-}
-
-.search-bar input, .search-bar select, .search-bar button{
-  padding:10px;
-  border-radius:6px;
-  border:1px solid #1f2933;
-  background:#020617;
-  color:#e5e7eb;
-}
-
-.search-bar button{
-  background:#2563eb;
-  border:none;
-  cursor:pointer;
-}
-
-.results{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
-  gap:16px;
-}
-
-.card{
-  background:#020617;
-  border:1px solid #1f2933;
-  border-radius:10px;
-  padding:14px;
-}
-
-.risk-low{color:#22c55e;}
-.risk-medium{color:#facc15;}
-.risk-high{color:#ef4444;}
-
-footer{
-  margin-top:auto;
-  font-size:12px;
-  color:#64748b;
-  text-align:center;
+.card {
+  background:#111827;
+  padding:15px;
+  margin:10px;
+  border-radius:8px;
 }

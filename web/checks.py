@@ -1,26 +1,25 @@
-from flask import Blueprint, request, jsonify
-from auth_utils import token_required
-
-check_bp = Blueprint("check", __name__)
-
-@check_bp.route("/check", methods=["POST"])
-@token_required
-def check_username():
+@app.route("/api/check", methods=["POST"])
+def check_user():
     data = request.json
     username = data.get("username")
-    platform = data.get("platform","all")
-
     if not username:
-        return jsonify({"error":"Username required"}),400
+        return jsonify({"error": "username missing"}), 400
 
-    # MOCK response for testing
+    profiles = basic_lookup(username)
+    texts = [p.get("bio", "") for p in profiles]
+
+    threat = assess_threat(texts)
+    topics = extract_topics(texts)
+    narratives = detect_narratives(topics, threat)
+    timeline = build_timeline(profiles)
+    graph = build_graph(username, profiles, topics)
+
     return jsonify({
-        "profiles":[
-            {
-                "platform": platform,
-                "username": username,
-                "url": f"https://{platform}.com/{username}",
-                "nlp": {"risk":"low"}
-            }
-        ]
+        "username": username,
+        "profiles": profiles,
+        "threat": threat,
+        "topics": topics,
+        "narratives": narratives,
+        "timeline": timeline,
+        "graph": graph
     })
