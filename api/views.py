@@ -4,9 +4,12 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 from django.views.decorators.csrf import csrf_exempt
+from django.utils import timezone
+from rest_framework.generics import ListAPIView
 
 from Scrapers import x, facebook, instagram, nlp_, osint
-from api.models import Profile, Platform, Target, RawJSONData
+from api.models import Profile, Platform, Target, RawJSONData, Post
+from api import serializers
 
 def index(request):
     return render(request,"index.html")
@@ -100,3 +103,40 @@ def instagram_view(request):
             {"error": str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+@api_view(["POST"])
+def save_x_tweet(request):
+    """
+    Persist a single raw X/Twitter tweet dict to Post via POST request.
+    Expects JSON body: {
+        "raw_tweet": {...},
+        "profile_username": "username"
+    }
+    """
+    data = request.data
+    raw_tweet = data.get("raw_tweet")
+    profile_username = data.get("profile_username")
+    raw_tweet["text_analysis"] = nlp_.analyze_text(raw_tweet.get("text")) if raw_tweet.get("text") else None
+
+    if not raw_tweet or not profile_username:
+        return Response({"error": "raw_tweet and profile_username are required"}, status=400)
+
+    url = f"https://x.com/{profile_username}/status/{raw_tweet.get('id')}"
+
+    post, created = Post.objects.get_or_create(
+        url=url,
+        defaults={"date": raw_tweet.get("created_at"), "username": profile_username},
+    )
+
+    post.populate_from_data(raw_tweet, username=profile_username)
+    post.save()
+
+    return Response({"success": True, "post_id": post.id})
+
+class XPostListView(ListAPIView):
+    """
+    API view to list all saved X/Twitter posts.
+    """
+    queryset = Post.objects.all()
+    serializer_class = serializers.PostSerializer
+    permission_classes = [AllowAny]

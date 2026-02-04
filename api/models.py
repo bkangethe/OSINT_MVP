@@ -101,20 +101,20 @@ class Profile(models.Model):
 
         return self
 
-    
 class Post(models.Model):
-    platform = models.ForeignKey(Platform, on_delete=models.CASCADE, related_name="posts")
-    profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="posts")
-    
-    # Basic info
+    # profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="posts")
+    username = models.CharField(max_length=100, blank=True, null=True)
     url = models.URLField()
     text = models.TextField()
+    text_analysis = models.CharField(max_length=100, blank=True, null=True)
     date = models.DateTimeField()
     lang = models.CharField(max_length=10, blank=True, null=True)
     reply_settings = models.CharField(max_length=50, blank=True, null=True)
     possibly_sensitive = models.BooleanField(default=False)
     edit_history_tweet_ids = models.JSONField(blank=True, null=True)
-    
+    referenced_tweets = models.JSONField(blank=True, null=True)
+    entities = models.JSONField(blank=True, null=True)
+
     # Metrics
     retweet_count = models.PositiveIntegerField(blank=True, null=True)
     reply_count = models.PositiveIntegerField(blank=True, null=True)
@@ -122,18 +122,6 @@ class Post(models.Model):
     quote_count = models.PositiveIntegerField(blank=True, null=True)
     bookmark_count = models.PositiveIntegerField(blank=True, null=True)
     impression_count = models.PositiveIntegerField(blank=True, null=True)
-    
-    # Extra tweet info
-    referenced_tweets = models.JSONField(blank=True, null=True)
-    context_annotations = models.JSONField(blank=True, null=True)
-    attachments = models.JSONField(blank=True, null=True)
-    entities = models.JSONField(blank=True, null=True)
-    
-    # Media / content type
-    is_video = models.BooleanField(default=False)
-    
-    # NLP / custom analysis
-    nlp_analysis = models.JSONField(blank=True, null=True)
 
     added_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -142,22 +130,22 @@ class Post(models.Model):
         ordering = ["-date", "-like_count"]
 
     def __str__(self):
-        return f"Post by {self.profile.username} on {self.platform.name}"
+        return f"{self.username}: {self.text[:50]}…"
 
-    # Populate fields helper
-    def populate_from_data(self, data: dict):
+    def populate_from_data(self, data: dict, username: str):   
         """
         Populate the Post instance from X/Twitter API JSON.
         """
+        self.username = username
         self.text = data.get("text")
-        self.url = f"https://x.com/{self.profile.username}/status/{data.get('id')}"
-        
+        self.text_analysis = data.get("text_analysis")
         self.lang = data.get("lang")
         self.reply_settings = data.get("reply_settings")
         self.possibly_sensitive = data.get("possibly_sensitive", False)
         self.edit_history_tweet_ids = data.get("edit_history_tweet_ids")
-        
-        # Metrics
+        self.referenced_tweets = data.get("referenced_tweets")
+        self.entities = data.get("entities")
+
         metrics = data.get("public_metrics", {})
         self.retweet_count = metrics.get("retweet_count")
         self.reply_count = metrics.get("reply_count")
@@ -165,29 +153,16 @@ class Post(models.Model):
         self.quote_count = metrics.get("quote_count")
         self.bookmark_count = metrics.get("bookmark_count")
         self.impression_count = metrics.get("impression_count")
-        
-        # Extra data
-        self.referenced_tweets = data.get("referenced_tweets")
-        self.context_annotations = data.get("context_annotations")
-        self.attachments = data.get("attachments")
-        self.entities = data.get("entities")
-        
-        # Check if media includes video
-        media_list = data.get("includes", {}).get("media", [])
-        self.is_video = any(media.get("type") == "video" for media in media_list)
-        
-        # Set tweet date
+
         created_at_str = data.get("created_at")
         if created_at_str:
             try:
                 self.date = parser.isoparse(created_at_str)
             except Exception:
-                from datetime import datetime
-                self.date = datetime.fromisoformat(created_at_str)
-
+                self.date = None
 
 class RawJSONData(models.Model):
-    data = models.JSONField()
+    data = models.TextField()
     fetched_at = models.DateTimeField(auto_now_add=True)
     def __str__(self):
         return f"Raw data  {self.fetched_at}"
