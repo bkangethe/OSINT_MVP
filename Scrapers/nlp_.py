@@ -51,6 +51,10 @@ def get_sentiment_analyzer():
 
 
 def analyze_text(text: str) -> dict:
+    """
+    Analyze the text for classification and sentiment, safely.
+    Returns a dict with label, score, risk, sentiment, polarity, entities.
+    """
     if not text or not text.strip():
         return {
             "label": "Normal",
@@ -61,32 +65,49 @@ def analyze_text(text: str) -> dict:
             "entities": [],
         }
 
-    classifier = get_classifier()
-    result = classifier(text)[0]
-    label = result["label"]
-    score = float(result["score"])
+    # Default fallback
+    label = "Normal"
+    score = 0.0
+    risk = "low"
+    sentiment = "neutral"
+    polarity = 0.0
 
-    if label == "Abuse":
-        risk = "high"
-    elif label == "Hate":
-        risk = "medium"
-    else:
-        risk = "low"
+    # --- Classification ---
+    try:
+        classifier = get_classifier()
+        result_list = classifier(text)
+        if result_list and isinstance(result_list, list) and isinstance(result_list[0], dict):
+            result = result_list[0]
+            label = result.get("label", "Normal")
+            score = float(result.get("score", 0.0))
 
-    # Sentiment analysis replacement
-    sentiment_analyzer = get_sentiment_analyzer()
-    sentiment_result = sentiment_analyzer(text)[0]
-    sentiment_label = sentiment_result["label"].lower()
+            if label == "Abuse":
+                risk = "high"
+            elif label == "Hate":
+                risk = "medium"
+            else:
+                risk = "low"
+    except Exception as e:
+        print("Classifier error:", e)
 
-    if "negative" in sentiment_label or "1" in sentiment_label or "2" in sentiment_label:
-        sentiment = "negative"
-        polarity = -1.0
-    elif "positive" in sentiment_label or "4" in sentiment_label or "5" in sentiment_label:
-        sentiment = "positive"
-        polarity = 1.0
-    else:
-        sentiment = "neutral"
-        polarity = 0.0
+    # --- Sentiment ---
+    try:
+        sentiment_analyzer = get_sentiment_analyzer()
+        sentiment_result_list = sentiment_analyzer(text)
+        if sentiment_result_list and isinstance(sentiment_result_list, list) and isinstance(sentiment_result_list[0], dict):
+            sentiment_label = sentiment_result_list[0].get("label", "neutral").lower()
+
+            if "negative" in sentiment_label or "1" in sentiment_label or "2" in sentiment_label:
+                sentiment = "negative"
+                polarity = -1.0
+            elif "positive" in sentiment_label or "4" in sentiment_label or "5" in sentiment_label:
+                sentiment = "positive"
+                polarity = 1.0
+            else:
+                sentiment = "neutral"
+                polarity = 0.0
+    except Exception as e:
+        print("Sentiment analyzer error:", e)
 
     return {
         "label": label,
@@ -94,4 +115,5 @@ def analyze_text(text: str) -> dict:
         "risk": risk,
         "sentiment": sentiment,
         "polarity": polarity,
+        "entities": [],
     }
