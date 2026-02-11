@@ -124,7 +124,7 @@ class XProfileListCreateView(ListCreateAPIView):
     """
     queryset = Profile.objects.filter(platform__name="X")
     serializer_class = serializers.ProfileSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
 
 class XPostListCreateView(ListCreateAPIView):
@@ -133,7 +133,7 @@ class XPostListCreateView(ListCreateAPIView):
     """
     queryset = Post.objects.all()
     serializer_class = serializers.PostSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
         data = request.data

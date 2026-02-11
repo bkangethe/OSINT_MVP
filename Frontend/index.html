@@ -38,16 +38,15 @@
 
 </div>
 
+<div class="flex h-screen bg-gray-100 overflow-hidden">
 
-<div class="flex h-screen justify-center items-start p-6 bg-gray-100">
-
-    <!-- profiles -->
-    <div class=" mx-auto w-1/4 bg-white p-6 rounded shadow ">
+    <!-- Profiles Sidebar -->
+    <div class="w-1/4 bg-white p-6 shadow overflow-y-auto">
         <h1 class="text-3xl font-bold mb-4 text-center">Profiles</h1>
-        <ul id="profiles" class="space-y-4"></ul>
         
+
         {% for profile in profiles %}
-            <div class="bg-gray-100 overflow-hidden p-6 bg-green-50">
+            <div class="bg-green-50 p-6 rounded mb-4">
                 <div class="flex items-center space-x-4">
                     <div>
                         <div class="flex items-center space-x-1">
@@ -60,7 +59,7 @@
 
                 <div class="mt-4 flex justify-between text-sm text-gray-600">
                     <div>
-                        <p class="font-bold">{{ profile.followers|default:"0"}}</p>
+                        <p class="font-bold">{{ profile.followers|default:"0" }}</p>
                         <p>Followers</p>
                     </div>
                     <div>
@@ -70,30 +69,33 @@
                     <div>
                         <p class="font-bold">{{ profile.posts|default:"0" }}</p>
                         <p>Score</p>
-                    </div>  
+                    </div>
                 </div>
             </div>
         {% endfor %}
-
     </div>
 
-    <!-- posts -->
-    <div class="mx-auto bg-white p-6 rounded shadow overflow-y-auto">
-          <h1 class="text-3xl font-bold mb-4 text-center">Posts</h1>
-          
-          <!-- Container for posts -->
-          <div id="posts" class="space-y-6"></div>
-          
-          <div class="flex justify-between mt-6">
-              <button id="prevBtn" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400" disabled>Previous</button>
-              <button id="nextBtn" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400" disabled>Next</button>
-          </div>
-      </div>
+    <!-- Posts Section -->
+    <div class="flex-1 bg-white p-6 shadow overflow-y-auto">
+        <h1 class="text-3xl font-bold mb-4 text-center">Posts</h1>
+
+        <div id="posts" class="space-y-6"></div>
+
+        <div class="flex justify-between mt-6">
+            <button id="prevBtn"
+                class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                disabled>
+                Previous
+            </button>
+            <button id="nextBtn"
+                class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                disabled>
+                Next
+            </button>
+        </div>
+    </div>
 
 </div>
-
-
-
 
 
 {% endblock %}

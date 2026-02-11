@@ -149,7 +149,7 @@
 
 document.addEventListener("DOMContentLoaded", () => {
 
-  let apiUrl = "http://127.0.0.1:8000/api/x-posts";
+  let apiUrl = "api/x-posts";
   let nextUrl = null;
   let prevUrl = null;
 
