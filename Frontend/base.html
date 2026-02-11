@@ -1,0 +1,63 @@
+{% load static %}
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}OSINT Dashboard{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body>
+    <div class="flex justify-between items-center px-4">
+        <header class="flex p-3">
+            <a href="index" class="p-5 text-white bg-blue-300 text-2xl font-semibold rounded-xl">OSINT Dashboard</a>
+        </header>
+
+
+        {% if user.is_authenticated %}
+            <div class="relative">
+            <!-- Profile button -->
+            <button
+                id="profileButton"
+                class="flex items-center space-x-2 focus:outline-none">
+                <div class="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">
+                {{ user.username|slice:":1"|upper }}
+                </div>
+                <span class="hidden sm:block ">
+                {{ user.username }}
+                </span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 9l-7 7-7-7" />
+                </svg>
+            </button>
+
+            <!-- Dropdown -->
+            <div
+                id="profileMenu"
+                class="hidden absolute right-0 mt-2 w-40 bg-white border rounded-md shadow-lg">
+                <form method="post" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="w-full text-left p-4 text-sm hover:bg-gray-100">
+                        Logout
+                    </button>
+                </form>
+            </div>
+            </div>
+        {% endif %}
+
+    </div>
+
+
+{% block content %}
+{% endblock %}
+
+
+
+
+
+<script src="{% static 'app.js'%}"></script>
+</body>
+</html>

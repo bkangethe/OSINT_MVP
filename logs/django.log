@@ -1,0 +1,17 @@
+Watching for file changes with StatReloader
+"GET /api/x-posts?limit=10&offset=10 HTTP/1.1" 200 37149
+/home/itsme/BK_OSINT/Django_OSINT/settings.py changed, reloading.
+Watching for file changes with StatReloader
+Watching for file changes with StatReloader
+/home/itsme/BK_OSINT/api/apps.py changed, reloading.
+Watching for file changes with StatReloader
+Watching for file changes with StatReloader
+Watching for file changes with StatReloader
+/home/itsme/BK_OSINT/api/apps.py changed, reloading.
+Watching for file changes with StatReloader
+"GET /api/token HTTP/1.1" 301 0
+Method Not Allowed: /api/token/
+"GET /api/token/ HTTP/1.1" 405 40
+Not Found: /favicon.ico
+"GET /favicon.ico HTTP/1.1" 404 2674
+/home/itsme/BK_OSINT/Django_OSINT/settings.py changed, reloading.
