@@ -137,6 +137,14 @@ REST_FRAMEWORK = {
     
 }
 
+# session settings
+SESSION_COOKIE_AGE = 60 * 60 * 2 
+
+LOGIN_URL = "login"
+LOGIN_REDIRECT_URL = "index"
+LOGOUT_REDIRECT_URL = "login"
+
+
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
