@@ -1,43 +1,70 @@
 {% load static %}
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>{% block title %}OSINT Dashboard{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        /* Make logo span entire height, scrollable */
+        .hero-logo {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: auto; /* maintain aspect ratio */
+            z-index: -1; /* behind everything */
+        }
+        
+        /* Content container scrolls normally */
+        .content-container {
+            position: relative;
+            padding: 2rem;
+        }
+        
+        /* Cards lightly transparent */
+        .card-transparent {
+            background-color: rgba(31, 31, 31, 0.5); /* semi-transparent so logo shines */
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        /* Text shadow for readability */
+        .text-shadow {
+            text-shadow: 1px 1px 4px rgba(0,0,0,0.7);
+        }
+        </style>
+        
+        
 </head>
 
-<body>
-    <div class="flex justify-between items-center px-4">
-        <header class="flex p-3">
-            <a href="index" class="p-5 text-white bg-blue-300 text-2xl font-semibold rounded-xl">OSINT Dashboard</a>
+<body class="bg-gray-900 text-white">
+
+    <div class="flex justify-between items-center px-4 py-3 bg-gray-800 shadow-md">
+        <header class="flex">
+            <!-- Point directly to '/' to avoid reverse errors -->
+            <a href="/" class="p-5 text-white bg-blue-500 text-2xl font-semibold rounded-xl">
+                OSINT Dashboard
+            </a>
         </header>
 
-
         {% if user.is_authenticated %}
-            <div class="relative">
-            <!-- Profile button -->
-            <button
-                id="profileButton"
-                class="flex items-center space-x-2 focus:outline-none">
+        <div class="relative">
+            <button id="profileButton" class="flex items-center space-x-2 focus:outline-none">
                 <div class="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">
-                {{ user.username|slice:":1"|upper }}
+                    {{ user.username|slice:":1"|upper }}
                 </div>
-                <span class="hidden sm:block ">
-                {{ user.username }}
-                </span>
+                <span class="hidden sm:block">{{ user.username }}</span>
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M19 9l-7 7-7-7" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M19 9l-7 7-7-7" />
                 </svg>
             </button>
 
-            <!-- Dropdown -->
-            <div
-                id="profileMenu"
-                class="hidden absolute right-0 mt-2 w-40 bg-white border rounded-md shadow-lg">
+            <div id="profileMenu" class="hidden absolute right-0 mt-2 w-40 bg-white text-black border rounded-md shadow-lg">
                 <form method="post" action="{% url 'logout' %}">
                     {% csrf_token %}
                     <button type="submit" class="w-full text-left p-4 text-sm hover:bg-gray-100">
@@ -45,19 +72,13 @@
                     </button>
                 </form>
             </div>
-            </div>
+        </div>
         {% endif %}
-
     </div>
 
+    {% block content %}
+    {% endblock %}
 
-{% block content %}
-{% endblock %}
-
-
-
-
-
-<script src="{% static 'app.js'%}"></script>
+    <script src="{% static 'app.js'%}"></script>
 </body>
 </html>
