@@ -149,7 +149,7 @@
 
 document.addEventListener("DOMContentLoaded", () => {
 
-  let apiUrl = "api/x-posts";
+  let apiUrl = "/api/x-posts";
   let nextUrl = null;
   let prevUrl = null;
 
@@ -161,6 +161,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const res = await fetch(url);
       const data = await res.json();
+      console.log("Fetched data:", data);
 
       nextUrl = data.next;
       prevUrl = data.previous;
@@ -206,9 +207,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       postEl.innerHTML = `
         <p class="text-sm text-gray-500">${new Date(post.date).toLocaleString()}</p>
-        <h2 class="font-bold text-lg">@${post.username}</h2>
-        <p class="mt-2">${post.text}</p>
-        <p class="mt-2 text-gray-600 text-sm">
+        <h2 class="font-bold text-lg text-black">@${post.username}</h2>
+        <p class="mt-2 text-gray-800">${post.text}</p>
+        <p class="mt-2 text-gray-500 text-sm">
           Likes: ${post.like_count},
           Replies: ${post.reply_count},
           Retweets: ${post.retweet_count},
@@ -243,19 +244,21 @@ document.addEventListener("DOMContentLoaded", () => {
     fetchPosts(apiUrl);
   }
 
-  // 👤 Profile dropdown
-  const profileButton = document.getElementById("profileButton");
-  const profileMenu = document.getElementById("profileMenu");
-
-  if (profileButton && profileMenu) {
-    profileButton.addEventListener("click", (e) => {
-      e.stopPropagation();
-      profileMenu.classList.toggle("hidden");
-    });
-
-    document.addEventListener("click", () => {
-      profileMenu.classList.add("hidden");
-    });
-  }
 
 });
+
+
+// 👤 Profile dropdown
+const profileButton = document.getElementById("profileButton");
+const profileMenu = document.getElementById("profileMenu");
+
+if (profileButton && profileMenu) {
+  profileButton.addEventListener("click", (e) => {
+    e.stopPropagation();
+    profileMenu.classList.toggle("hidden");
+  });
+
+  document.addEventListener("click", () => {
+    profileMenu.classList.add("hidden");
+  });
+  }
