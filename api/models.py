@@ -30,8 +30,8 @@ class CrossPlatformProfile(models.Model):
         return f"{self.username} on {self.platform.name}"
 
 class Profile(models.Model):
-    platform = models.ForeignKey(Platform, on_delete=models.CASCADE, related_name="profiles")
-    target = models.ForeignKey(Target, on_delete=models.CASCADE, related_name="profiles")
+    platform = models.ForeignKey(Platform, on_delete=models.CASCADE, related_name="profiles", blank=True, null=True)
+    target = models.ForeignKey(Target, on_delete=models.CASCADE, related_name="profiles", blank=True, null=True)
     
     # Basic identity
     username = models.CharField(max_length=100)
@@ -68,7 +68,7 @@ class Profile(models.Model):
         ordering = ["-followers", "-tweet_count"]
 
     def __str__(self):
-        return f"{self.username} on {self.platform.name}"
+        return f"{self.username} "
     
     # Populate fields helper
     def populate_from_data(self, data: dict):
@@ -106,7 +106,7 @@ class Post(models.Model):
     username = models.CharField(max_length=100, blank=True, null=True)
     url = models.URLField()
     text = models.TextField()
-    text_analysis = models.CharField(max_length=100, blank=True, null=True)
+    text_analysis = models.JSONField(blank=True, null=True)
     date = models.DateTimeField()
     lang = models.CharField(max_length=10, blank=True, null=True)
     reply_settings = models.CharField(max_length=50, blank=True, null=True)

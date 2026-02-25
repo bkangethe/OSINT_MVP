@@ -1,108 +1,227 @@
-{% extends "base.html" %}
-{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>OSINT Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 
-{% block content %}
+    <style>
+        body {
+            background-color: #111827;
+        }
 
+        .glass-card {
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(8px);
+        }
+    </style>
+</head>
 
-<!-- Full logo as scrollable background image -->
-<img src="{% static 'images/logo.png' %}" 
-     style="
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: auto;
-        z-index: -1;
-     "
+<body class="text-white">
+
+<!-- NAVBAR -->
+<div class="flex justify-between items-center px-6 py-4 bg-gray-800 shadow-lg">
+    <a href="/" class="px-6 py-2 bg-blue-600 text-xl font-semibold rounded-xl hover:bg-blue-500 transition">
+        OSINT Dashboard 
+    </a>
+</div>
+<!-- BACKGROUND IMAGE -->
+<img src="/static/images/logo.png"
+     class="absolute top-0 left-0 w-full opacity-10 pointer-events-none select-none"
      alt="Logo">
 
-<div style="position: relative; padding: 2rem;">
-
-    <!-- Top Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-
-        <div style="background: rgba(0,0,0,0.5); padding: 1rem; border-radius: 12px;">
-            <p class="text-white text-sm">Alerts</p>
-            <p id="posts-count" class="text-white text-2xl font-bold">0</p>
+<!-- MAIN CONTAINER -->
+<div class="relative max-w-7xl mx-auto p-8">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        <!-- Flagged (High Risk) -->
+        <div class="glass-card p-6 rounded-xl bg-red-50/20 backdrop-blur-md shadow-lg transform hover:scale-105 transition-transform duration-200">
+            <p class="text-sm text-red-400 font-semibold uppercase tracking-wide">Flagged</p>
+            <p class="text-2xl font-semibold text-red-500">{{ flagged_count }}</p>
         </div>
 
-        <div style="background: rgba(0,0,0,0.5); padding: 1rem; border-radius: 12px;">
-            <p class="text-white text-sm">Flagged</p>
-            <p id="flagged-count" class="text-white text-2xl font-bold">2</p>
+        <!-- Alerts (Medium / Soft Risk) -->
+        <div class="glass-card p-6 rounded-xl bg-yellow-50/20 backdrop-blur-md shadow-lg transform hover:scale-105 transition-transform duration-200">
+            <p class="text-sm text-yellow-400 font-semibold uppercase tracking-wide">Alerts</p>
+            <p class="text-2xl font-semibold text-yellow-500">{{ alerts_count }}</p>
         </div>
 
-        <div style="background: rgba(0,0,0,0.5); padding: 1rem; border-radius: 12px;">
-            <p class="text-white text-sm">Total Posts</p>
-            <p id="total-count" class="text-white text-2xl font-bold">0</p>
+        <!-- Total Posts -->
+        <div class="glass-card p-6 rounded-xl bg-gray-50/20 backdrop-blur-md shadow-md transform hover:scale-105 transition-transform duration-200">
+            <p class="text-sm text-gray-400 font-semibold uppercase tracking-wide">Total Posts</p>
+            <p class="text-2xl font-semibold text-blue-500">{{ num_posts }}</p>
         </div>
 
-        <div style="background: rgba(0,0,0,0.5); padding: 1rem; border-radius: 12px;">
-            <p class="text-white text-sm">Profiles</p>
-            <p id="accounts-count" class="text-white text-2xl font-bold">0</p>
+        <!-- Profiles -->
+        <div class="glass-card p-6 rounded-xl bg-blue-50/20 backdrop-blur-md shadow-md transform hover:scale-105 transition-transform duration-200">
+            <p class="text-sm text-blue-400 font-semibold uppercase tracking-wide">Profiles</p>
+            <p class="text-2xl font-semibold text-blue-500">{{ profiles|length }}</p>
         </div>
 
     </div>
 
-    <!-- Main Section -->
-    <div class="flex flex-col lg:flex-row gap-6">
+    <!-- PROFILES + POSTS ROW -->
+    <div class="flex flex-col lg:flex-row gap-8 h-[700px] overflow-hidden">
 
-        <!-- Profiles -->
-        <div class="w-full lg:w-1/4">
+        <!-- PROFILES -->
+        <div class="lg:w-1/3 space-y-4">
 
-            <h2 class="text-2xl font-bold text-white mb-4">Profiles</h2>
+            <h2 class="text-2xl font-bold mb-4">Profiles</h2>
 
+            <!-- Profile Card -->
             {% for profile in profiles %}
-            <div style="background: rgba(0,0,0,0.5); padding: 1rem; border-radius: 12px; margin-bottom: 1rem;">
+            <div class="glass-card p-5 rounded-xl">
+                    <h3 class="font-bold text-lg">{{ profile.name }}</h3>
+                    <p class="text-gray-400 text-sm mb-3">@{{ profile.username }}</p>
 
-                <h3 class="text-white font-bold">
-                    {{ profile.display_name }}
-                    {{ profile.verified|yesno:"✔️," }}
-                </h3>
-
-                <p class="text-gray-200 text-sm mb-2">
-                    @{{ profile.username }}
-                </p>
-
-                <div class="flex justify-between text-sm text-gray-200">
-                    <div>
-                        <p class="font-bold">{{ profile.followers|default:"0" }}</p>
-                        <p>Followers</p>
-                    </div>
-                    <div>
-                        <p class="font-bold">{{ profile.following|default:"0" }}</p>
-                        <p>Following</p>
-                    </div>
-                    <div>
-                        <p class="font-bold">{{ profile.posts|default:"0" }}</p>
-                        <p>Score</p>
+                    <div class="flex justify-between text-sm">
+                        <div>
+                            <p class="font-bold">{{ profile.followers }}</p>
+                            <p class="text-gray-400">Followers</p>
+                        </div>
+                        <div>
+                            <p class="font-bold">{{ profile.following }}</p>
+                            <p class="text-gray-400">Following</p>
+                        </div>
+                        <div>
+                            <p class="font-bold text-blue-400">{{ profile.score }}</p>
+                            <p class="text-gray-400">Score</p>
+                        </div>
                     </div>
                 </div>
+            {% endfor %}
+        </div>
 
+        <!-- POSTS -->
+        <div class="flex-1 space-y-6">
+
+            <h2 class="text-2xl font-bold mb-4">Posts</h2>
+
+            <!-- Post Card -->
+             {% for post in filtered_posts %}
+            <div class="glass-card p-6 rounded-xl">
+                <p class="text-gray-300 mb-4">
+                    {{ post.text }} 
+                </p>
+                <div class="flex justify-between text-sm text-gray-400">
+                    <div class="space-x-4">
+                        <span>Cluster...</span>
+                        <a href="{{ post.url }}" class="text-blue-300">View on X</a>
+                    </div>
+                    <span class="font-semibold text-green-400">{{ post.text_analysis.risk }}</span>
+                </div>
             </div>
             {% endfor %}
 
         </div>
 
-        <!-- Posts -->
-        <div class="flex-1">
+    </div>
 
-            <h2 class="text-2xl font-bold text-white mb-4">Posts</h2>
+    <!-- CLUSTER SUMMARY -->
+    <div class="mt-16">
 
-            <div id="posts" class="space-y-6"></div>
+        <h2 class="text-2xl font-bold mb-6">Cluster Summary</h2>
 
-            <div class="flex justify-between mt-6">
-                <button id="prevBtn" class="px-4 py-2 bg-gray-700 text-white rounded">
-                    Previous
-                </button>
-                <button id="nextBtn" class="px-4 py-2 bg-gray-700 text-white rounded">
-                    Next
-                </button>
+        <div id="cluster-container" class="space-y-6"></div>
+
+    </div>
+
+    <!-- GRAPH ANALYSIS -->
+    <div class="mt-16">
+
+        <h2 class="text-2xl font-bold mb-6">Graph Analysis</h2>
+
+        <div class="flex flex-col lg:flex-row gap-6">
+
+            <!-- Left: Graph -->
+            <div class="flex-1 relative">
+                <div id="graph-loading" class="loading-overlay absolute inset-0 flex items-center justify-center bg-black/50 z-10">
+                    <div class="spinner"></div>
+                </div>
+                <div id="graph" class="bg-gray-900 rounded-xl h-[600px] w-full"></div>
+            </div>
+
+
+            <!-- AI Narrative -->
+            <div class="lg:w-1/3 flex flex-col gap-6">
+                
+                <div id="ai-summary" class="bg-gray rounded-xl h-[400px] overflow-y-auto">
+                    <h3 class="text-xl font-bold mb-3">Summary</h3>
+                    <p id="ai-summary-text" class="text-gray-300 leading-relaxed">
+                        Generating intelligence summary...
+                    </p>
+                </div>
+
+
             </div>
 
         </div>
+        
+        <!-- Network Metrics -->
+        <div id="network-metrics" class="grid grid-cols-3 gap-6 my-3"></div>
 
     </div>
 
 </div>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="/static/graph.js"></script>
 
-{% endblock %}
+<script>
+const summaryUrl = "/api/narrative";  
+const container = document.getElementById("cluster-container");
+
+function getRiskColor(score) {
+    if (score > 0.6) return "text-red-400";
+    if (score > 0.3) return "text-yellow-400";
+    return "text-green-400";
+}
+
+// Fetch cluster data from API
+async function loadClusters() {
+    try {
+        const response = await fetch(summaryUrl);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const clusteringData = await response.json();
+
+        clusteringData.clusters.forEach(cluster => {
+            const riskColor = getRiskColor(cluster.coordinated_score);
+
+            const clusterCard = document.createElement("div");
+            clusterCard.className = "bg-black/50 p-6 rounded-xl";
+
+            clusterCard.innerHTML = `
+                <div class="flex justify-between items-center mb-4">
+                    <div>
+                        <h3 class="text-xl font-bold">Cluster #${cluster.cluster_id}</h3>
+                        <p class="text-gray-400 text-sm">${cluster.num_tweets} Tweets</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm text-gray-400">Coordinated Score</p>
+                        <p class="text-xl font-bold ${riskColor}">
+                            ${cluster.coordinated_score}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    ${cluster.tweets.map(tweet => `
+                        <div class="bg-gray-800 p-3 rounded text-sm text-gray-300">
+                            ${tweet}
+                        </div>
+                    `).join("")}
+                </div>
+            `;
+
+            container.appendChild(clusterCard);
+        });
+    } catch (error) {
+        console.error("Failed to load clusters:", error);
+        container.innerHTML = `<p class="text-red-400">Failed to load clusters.</p>`;
+    }
+}
+
+// Initialize
+loadClusters();
+</script>
+
+</body>
+</html>
