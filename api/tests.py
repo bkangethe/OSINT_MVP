@@ -10,7 +10,9 @@ print(type(tweet_data))
 
 data = tweet_data.get("data", {})
 
-endpoint = "http://127.0.0.1:8000/api/x_save"
+endpoint = "http://127.0.0.1:8000/api/x-posts"
+
+
 
 for d in data:
     payload = {
@@ -20,4 +22,8 @@ for d in data:
     response = requests.post(endpoint, json=payload)
     print(response.status_code)
     print(response.json())
+
+profile_endpoint = "http://127.0.1:8000/api/x-profiles"
+response = requests.post(profile_endpoint, json=profile)
+print(response.status_code)
 

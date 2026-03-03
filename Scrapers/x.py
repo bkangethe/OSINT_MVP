@@ -1,23 +1,41 @@
 import os
+import logging
+from typing import Any
+
 import requests
 from dotenv import load_dotenv
 
 from api.models import RawJSONData
-from .nlp_ import analyze_text
+from datetime import datetime
+from api.nlp import analyze_text
+from api.clustering import NarrativeClusterEngine
+from alerts.utils import create_narrative_alert
 
 load_dotenv()
+LOGGER = logging.getLogger(__name__)
 
 BEARER_TOKEN = os.getenv("TWITTER_BEARER_TOKEN")
 BASE_URL = "https://api.twitter.com/2"
+REQUEST_TIMEOUT = 15
+TWITTER_MIN_RESULTS = 1
+TWITTER_MAX_RESULTS = 2
 
 HEADERS = {
     "Authorization": f"Bearer {BEARER_TOKEN}",
 }
 
-def get_user(username: str) -> dict | None:
+
+def _normalize_max_results(max_results: int) -> int:
+    if max_results <= 0:
+        return TWITTER_MIN_RESULTS
+    return max(TWITTER_MIN_RESULTS, min(TWITTER_MAX_RESULTS, max_results))
+
+
+def get_user(username: str) -> dict[str, Any]:
     """
     Fetch a Twitter/X user by username.
     """
+
     url = f"{BASE_URL}/users/by/username/{username}"
     params = {
         "user.fields": (
@@ -28,21 +46,25 @@ def get_user(username: str) -> dict | None:
         )
     }
 
-    response = requests.get(url, headers=HEADERS, params=params)
+    try:
+        response = requests.get(url, headers=HEADERS, params=params, timeout=REQUEST_TIMEOUT)
+    except requests.RequestException as exc:
+        return {"error": f"REQUEST_FAILED: {exc}"}
 
     if response.status_code != 200:
         return {"error": f"HTTP_{response.status_code}"}
 
-    return response.json().get("data")
+    return response.json().get("data") or {}
 
 
-def get_recent_tweets_by_user_id(user_id: str, max_results: int) -> dict:
+def get_recent_tweets_by_user_id(user_id: str, max_results: int) -> dict[str, Any]:
     """
     Fetch recent tweets for a given user ID.
     """
+
     url = f"{BASE_URL}/users/{user_id}/tweets"
     params = {
-        "max_results": max_results,
+        "max_results": _normalize_max_results(max_results),
         "tweet.fields": (
             "id,text,created_at,author_id,conversation_id,in_reply_to_user_id,"
             "lang,entities,attachments,context_annotations,geo,public_metrics,"
@@ -52,16 +74,21 @@ def get_recent_tweets_by_user_id(user_id: str, max_results: int) -> dict:
         "media.fields": "url,preview_image_url",
     }
 
-    response = requests.get(url, headers=HEADERS, params=params)
-    response.raise_for_status()
+    try:
+        response = requests.get(url, headers=HEADERS, params=params, timeout=REQUEST_TIMEOUT)
+        response.raise_for_status()
+    except requests.RequestException as exc:
+        return {"error": f"REQUEST_FAILED: {exc}"}
 
     return response.json()
 
-def search_x(username: str, max_results: int = 1) -> dict:
+def search_x(username: str, max_results: int = TWITTER_MIN_RESULTS) -> dict[str, Any]:
     """
     Search X/Twitter for a user and their recent tweets.
     Returns raw tweet data + NLP analysis.
+    Also performs narrative clustering and alert generation.
     """
+
     results = {
         "keyword": username,
         "people": [],
@@ -70,40 +97,73 @@ def search_x(username: str, max_results: int = 1) -> dict:
     }
 
     if not username or len(username) < 3:
+        results["error"] = "INVALID_USERNAME"
         return results
 
-    # ---- Fetch user ----
     user = get_user(username)
-    RawJSONData.objects.create(data=user)
+
+    if user:
+        RawJSONData.objects.create(data=user)
 
     if not user or user.get("error"):
+        results["error"] = user.get("error") if isinstance(user, dict) else "USER_LOOKUP_FAILED"
         return results
 
     results["people"].append(user)
 
-    # -tweets
     try:
         tweets_response = get_recent_tweets_by_user_id(
             user_id=user["id"],
             max_results=max_results,
         )
-        RawJSONData.objects.create(data=tweets_response)
+
+        if tweets_response:
+            RawJSONData.objects.create(data=tweets_response)
+
+        if tweets_response.get("error"):
+            results["error"] = tweets_response["error"]
+            return results
 
         tweets = tweets_response.get("data", [])
         includes = tweets_response.get("includes", {})
 
-        for tweet in tweets:
-            text = tweet.get("text")
+        cluster_items = []
 
+        requested_count = max(0, max_results)
+
+        for tweet in tweets[:requested_count]:
+            text = tweet.get("text")
             tweet["includes"] = includes
+
+            analysis = analyze_text(text) if text else None
 
             results["tweets"].append({
                 "raw": tweet,
-                "analysis": analyze_text(text) if text else None,
+                "analysis": analysis,
             })
+
+            # Prepare item for clustering
+            if text:
+                cluster_items.append({
+                    "text": text,
+                    "timestamp": datetime.fromisoformat(
+                        tweet.get("created_at").replace("Z", "+00:00")
+                    ) if tweet.get("created_at") else datetime.utcnow(),
+                    "risk_score": analysis.get("score", 0.0) if analysis else 0.0
+                })
+
+        #  RUN CLUSTERING + ALERTS
+        if len(cluster_items) >= 5:
+            engine = NarrativeClusterEngine()
+            clusters = engine.cluster(cluster_items)
+
+            for cluster in clusters:
+                if cluster["severity"] in ["medium", "high"]:
+                    create_narrative_alert(cluster)
 
         return results
 
-    except Exception as exc:
+    except (KeyError, TypeError, ValueError) as exc:
+        LOGGER.exception("Error while processing tweets for username '%s'", username)
         results["error"] = str(exc)
         return results

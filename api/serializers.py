@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 
-from api.models import Post, Profile
+from api.models import Post, Profile, Platform
 
 class PostSerializer(serializers.ModelSerializer):
     class Meta:
@@ -12,6 +12,27 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = '__all__'
+
+    def create(self, validated_data):
+        request = self.context.get('request')
+        raw_data = request.data  
+
+        platform, _ = Platform.objects.get_or_create(name="X")
+        validated_data['platform'] = platform
+
+        target = validated_data.get('target')
+        username = validated_data.get('username')
+
+        profile, _ = Profile.objects.update_or_create(
+            platform=platform,
+            username=username,
+            defaults={'target': target}
+        )
+
+        profile.populate_from_data(raw_data)
+        profile.save()
+
+        return profile
 
 class UserSignupSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
