@@ -16,25 +16,6 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# LOGGING = {
-#     "version": 1,
-#     "disable_existing_loggers": False,
-#     "handlers": {
-#         "file": {
-#             "level": "INFO",
-#             "class": "logging.FileHandler",
-#             "filename": BASE_DIR / "logs/django.log",
-#         },
-#     },
-#     "loggers": {
-#         "django": {
-#             "handlers": ["file"],
-#             "level": "INFO",
-#             "propagate": True,
-#         },
-#     },
-# }
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
@@ -61,6 +42,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'api',
+    'alerts',  # ✅ ADDED ALERT SYSTEM
     'crispy_forms',
     'crispy_tailwind',
 ]
@@ -126,6 +108,8 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+
 REST_FRAMEWORK = {
 
      "DEFAULT_AUTHENTICATION_CLASSES": [
@@ -141,6 +125,7 @@ REST_FRAMEWORK = {
     
 }
 
+
 # session settings
 SESSION_COOKIE_AGE = 60 * 60 * 2 
 
@@ -154,7 +139,7 @@ LOGOUT_REDIRECT_URL = "login"
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Africa/Nairobi'   # ✅ UPDATED FROM UTC
 
 USE_I18N = True
 
@@ -168,3 +153,23 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
+
+
+
+# EMAIL CONFIGURATION (FOR ALERT SYSTEM)
+
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
+EMAIL_HOST_USER = "bskangethe@gmail.com"         
+EMAIL_HOST_PASSWORD = "ohbp ectq broc jgki"   
+
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+ALERT_EMAIL_RECIPIENT = "bskangethe@gmail.com"    
+
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

@@ -51,7 +51,7 @@ def all_data(request):
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
 
-@api_view(["POST"])
+@api_view(["POST"	])
 def x_view(request):
     username = request.data.get("username")
     if not username:
@@ -105,7 +105,7 @@ def facebook_view(request):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
     
-@api_view(["POST"])
+@api_view(["POST" "GET"])
 def instagram_view(request):
     username = request.data.get("username")
     print(username)

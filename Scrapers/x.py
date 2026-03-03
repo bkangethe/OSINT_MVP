@@ -57,7 +57,7 @@ def get_recent_tweets_by_user_id(user_id: str, max_results: int) -> dict:
 
     return response.json()
 
-def search_x(username: str, max_results: int = 10) -> dict:
+def search_x(username: str, max_results: int = 1) -> dict:
     """
     Search X/Twitter for a user and their recent tweets.
     Returns raw tweet data + NLP analysis.
