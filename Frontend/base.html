@@ -1,70 +1,46 @@
-{% load static %}
-
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <title>{% block title %}OSINT Dashboard{% endblock %}</title>
+    <title>OSINT Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
 
     <style>
-        /* Make logo span entire height, scrollable */
-        .hero-logo {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: auto; /* maintain aspect ratio */
-            z-index: -1; /* behind everything */
+        body {
+            background-color: #111827;
         }
-        
-        /* Content container scrolls normally */
-        .content-container {
-            position: relative;
-            padding: 2rem;
+
+        .glass-card {
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(8px);
         }
-        
-        /* Cards lightly transparent */
-        .card-transparent {
-            background-color: rgba(31, 31, 31, 0.5); /* semi-transparent so logo shines */
-            border-radius: 12px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-        }
-        
-        /* Text shadow for readability */
-        .text-shadow {
-            text-shadow: 1px 1px 4px rgba(0,0,0,0.7);
-        }
-        </style>
-        
-        
+    </style>
 </head>
 
-<body class="bg-gray-900 text-white">
-
-    <div class="flex justify-between items-center px-4 py-3 bg-gray-800 shadow-md">
-        <header class="flex">
-            <!-- Point directly to '/' to avoid reverse errors -->
-            <a href="/" class="p-5 text-white bg-blue-500 text-2xl font-semibold rounded-xl">
-                OSINT Dashboard
-            </a>
-        </header>
-
+<body class="text-white">
+    <!-- NAVBAR -->
+    <div class="flex justify-between items-center px-6 py-4 bg-gray-800 shadow-lg">
+        <a href="/" class="px-6 py-2 bg-blue-600 text-xl font-semibold rounded-xl hover:bg-blue-500 transition">
+            OSINT Dashboard
+        </a>
         {% if user.is_authenticated %}
         <div class="relative">
             <button id="profileButton" class="flex items-center space-x-2 focus:outline-none">
-                <div class="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">
+                <div
+                    class="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">
                     {{ user.username|slice:":1"|upper }}
                 </div>
                 <span class="hidden sm:block">{{ user.username }}</span>
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M19 9l-7 7-7-7" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                 </svg>
             </button>
 
-            <div id="profileMenu" class="hidden absolute right-0 mt-2 w-40 bg-white text-black border rounded-md shadow-lg">
+            <div id="profileMenu"
+                class="hidden absolute right-0 mt-2 w-40 bg-white text-black border rounded-md shadow-lg">
                 <form method="post" action="{% url 'logout' %}">
                     {% csrf_token %}
                     <button type="submit" class="w-full text-left p-4 text-sm hover:bg-gray-100">
@@ -76,9 +52,94 @@
         {% endif %}
     </div>
 
+    <!-- BACKGROUND IMAGE -->
+    <img src="/static/images/logo.png" class="absolute top-0 left-0 w-full opacity-10 pointer-events-none select-none"
+        alt="Logo">
+
+
+
+
+    <!-- metrics modal -->
+    {% include 'includes/metric_posts.html' with posts=alerts div_id="alertsModal" title="Alerts" %}
+    {% include 'includes/metric_posts.html' with posts=flagged div_id="flaggedModal" title="Flagged" %}
+    {% include 'includes/metric_posts.html' with posts=all div_id="allPostsModal" title="All Posts" %}
+
+    <!-- Modal -->
+    <div class="modal fade" id="postModal" tabindex="-1" aria-labelledby="postModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div
+                class="modal-content bg-gray-900/80 backdrop-blur-md text-white shadow-xl border border-gray-700 rounded-4 p-6">
+
+                <!-- Body -->
+                <div class="modal-body space-y-4">
+
+                    <div>
+                        <strong class="text-gray-300">Username:</strong>
+                        <span id="modal-username" class="text-blue-400 font-semibold"></span>
+                    </div>
+
+                    <div>
+                        <strong class="text-gray-300">Text:</strong>
+                        <span id="modal-text" class="text-gray-200"></span>
+                    </div>
+
+                    <div>
+                        <strong class="text-gray-300">URL:</strong>
+                        <a href="#" target="_blank" id="modal-url" class="text-blue-400 hover:text-blue-300 text-sm">
+                            Open Post
+                        </a>
+                    </div>
+
+                    <div>
+                        <strong class="text-gray-300">Analysis:</strong>
+                        <span id="modal-label" class="px-2 py-1 rounded bg-blue-500/20 text-blue-300 text-sm"></span>
+                        <span id="modal-risk" class="px-2 py-1 rounded bg-yellow-500/20 text-yellow-300 text-sm"></span>
+                        Score: <span id="modal-score" class="font-semibold text-gray-200"></span>
+                    </div>
+
+                    <div>
+                        <strong class="text-gray-300">Sentiment:</strong>
+                        <span id="modal-sentiment" class="italic text-gray-200"></span>
+                        (Polarity: <span id="modal-polarity" class="text-gray-300"></span>)
+                    </div>
+
+                    <div>
+                        <strong class="text-gray-300">Date:</strong>
+                        <span id="modal-date" class="text-gray-200"></span>
+                    </div>
+
+                    <div>
+                        <strong class="text-gray-300">Engagement:</strong>
+                        Likes: <span id="modal-likes" class="text-green-400"></span>,
+                        Retweets: <span id="modal-retweets" class="text-blue-400"></span>,
+                        Replies: <span id="modal-replies" class="text-yellow-400"></span>,
+                        Quotes: <span id="modal-quotes" class="text-gray-400"></span>
+                    </div>
+
+                </div>
+
+                <!-- Footer -->
+                <div class="modal-footer border-t border-gray-700 mt-4 pt-4">
+                    <button type="button" class="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 transition"
+                        data-bs-dismiss="modal">
+                        Close
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+
     {% block content %}
+
     {% endblock %}
 
-    <script src="{% static 'app.js'%}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="/static/graph.js"></script>
+    <script src="/static/app.js"></script>
 </body>
+
 </html>

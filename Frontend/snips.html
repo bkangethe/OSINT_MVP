@@ -1,0 +1,238 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}OSINT Dashboard{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        /* Make logo span entire height, scrollable */
+        .hero-logo {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: auto; /* maintain aspect ratio */
+            z-index: -1; /* behind everything */
+        }
+        
+        /* Content container scrolls normally */
+        .content-container {
+            position: relative;
+            padding: 2rem;
+        }
+        
+        /* Cards lightly transparent */
+        .card-transparent {
+            background-color: rgba(31, 31, 31, 0.5); /* semi-transparent so logo shines */
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        /* Text shadow for readability */
+        .text-shadow {
+            text-shadow: 1px 1px 4px rgba(0,0,0,0.7);
+        }
+        </style>
+        
+        
+</head>
+
+<body class="bg-gray-900 text-white">
+
+    <div class="flex justify-between items-center px-4 py-3 bg-gray-800 shadow-md">
+        <header class="flex">
+            <!-- Point directly to '/' to avoid reverse errors -->
+            <a href="/" class="p-5 text-white bg-blue-500 text-2xl font-semibold rounded-xl">
+                OSINT Dashboard
+            </a>
+        </header>
+
+        {% if user.is_authenticated %}
+        <div class="relative">
+            <button id="profileButton" class="flex items-center space-x-2 focus:outline-none">
+                <div class="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">
+                    {{ user.username|slice:":1"|upper }}
+                </div>
+                <span class="hidden sm:block">{{ user.username }}</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M19 9l-7 7-7-7" />
+                </svg>
+            </button>
+
+            <div id="profileMenu" class="hidden absolute right-0 mt-2 w-40 bg-white text-black border rounded-md shadow-lg">
+                <form method="post" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="w-full text-left p-4 text-sm hover:bg-gray-100">
+                        Logout
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    {% block content %}
+    {% endblock %}
+
+    <script src="{% static 'app.js'%}"></script>
+</body>
+</html>
+
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+
+<!-- Full logo as scrollable background image -->
+<img src="{% static 'images/logo.png' %}" 
+     style="
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: auto;
+        z-index: -1;
+     "
+     alt="Logo">
+
+<div style="position: relative; padding: 2rem;">
+
+    <!-- Top Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+
+        <div style="background: rgba(0,0,0,0.5); padding: 1rem; border-radius: 12px;">
+            <p class="text-white text-sm">Alerts</p>
+            <p id="posts-count" class="text-white text-2xl font-bold">0</p>
+        </div>
+
+        <div style="background: rgba(0,0,0,0.5); padding: 1rem; border-radius: 12px;">
+            <p class="text-white text-sm">Flagged</p>
+            <p id="flagged-count" class="text-white text-2xl font-bold">2</p>
+        </div>
+
+        <div style="background: rgba(0,0,0,0.5); padding: 1rem; border-radius: 12px;">
+            <p class="text-white text-sm">Total Posts</p>
+            <p id="total-count" class="text-white text-2xl font-bold">0</p>
+        </div>
+
+        <div style="background: rgba(0,0,0,0.5); padding: 1rem; border-radius: 12px;">
+            <p class="text-white text-sm">Profiles</p>
+            <p id="accounts-count" class="text-white text-2xl font-bold">0</p>
+        </div>
+
+    </div>
+
+    <!-- Main Section -->
+    <div class="flex flex-col lg:flex-row gap-6">
+
+        <!-- Profiles -->
+        <div class="w-full lg:w-1/4">
+
+            <h2 class="text-2xl font-bold text-white mb-4">Profiles</h2>
+
+            {% for profile in profiles %}
+            <div style="background: rgba(0,0,0,0.5); padding: 1rem; border-radius: 12px; margin-bottom: 1rem;">
+
+                <h3 class="text-white font-bold">
+                    {{ profile.display_name }}
+                    {{ profile.verified|yesno:"✔️," }}
+                </h3>
+
+                <p class="text-gray-200 text-sm mb-2">
+                    @{{ profile.username }}
+                </p>
+
+                <div class="flex justify-between text-sm text-gray-200">
+                    <div>
+                        <p class="font-bold">{{ profile.followers|default:"0" }}</p>
+                        <p>Followers</p>
+                    </div>
+                    <div>
+                        <p class="font-bold">{{ profile.following|default:"0" }}</p>
+                        <p>Following</p>
+                    </div>
+                    <div>
+                        <p class="font-bold">{{ profile.posts|default:"0" }}</p>
+                        <p>Score</p>
+                    </div>
+                </div>
+
+            </div>
+            {% endfor %}
+
+        </div>
+
+        <!-- Posts -->
+        <div class="flex-1">
+
+            <h2 class="text-2xl font-bold text-white mb-4">Posts</h2>
+
+            <div id="posts" class="space-y-6"></div>
+
+            <div class="flex justify-between mt-6">
+                <button id="prevBtn" class="px-4 py-2 bg-gray-700 text-white rounded">
+                    Previous
+                </button>
+                <button id="nextBtn" class="px-4 py-2 bg-gray-700 text-white rounded">
+                    Next
+                </button>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+
+
+
+<div class="glass-card p-6 rounded-xl bg-white/5 backdrop-blur-md border border-white/10 shadow-lg hover:shadow-2xl transition duration-300">
+
+    <!-- Post Content -->
+    <p class="text-gray-200 mb-5 leading-relaxed">
+        {{ post.text }}
+    </p>
+
+    <!-- Divider -->
+    <div class="border-t border-white/10 mb-4"></div>
+
+    <!-- Footer -->
+    <div class="flex items-center justify-between text-sm">
+
+        <!-- Left Section -->
+        <div class="flex items-center space-x-4 text-gray-400">
+            <span class="px-3 py-1 bg-white/10 rounded-full text-xs">
+                Cluster: {{ post.cluster }}
+            </span>
+
+            <a href="{{ post.url }}"
+               target="_blank"
+               class="text-blue-300 hover:text-blue-200 transition">
+                View on X →
+            </a>
+        </div>
+
+        <!-- Risk Badge -->
+        <span class="px-3 py-1 rounded-full text-xs font-semibold
+            {% if post.text_analysis.risk == 'High' %}
+                bg-red-500/20 text-red-400
+            {% elif post.text_analysis.risk == 'Medium' %}
+                bg-yellow-500/20 text-yellow-400
+            {% else %}
+                bg-green-500/20 text-green-400
+            {% endif %}
+        ">
+            {{ post.text_analysis.risk }} Risk
+        </span>
+
+    </div>
+</div>
