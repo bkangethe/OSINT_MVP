@@ -7,8 +7,8 @@ from dotenv import load_dotenv
 
 from api.models import RawJSONData
 from datetime import datetime
-from api.nlp import analyze_text
-from api.clustering import NarrativeClusterEngine
+from analysis.nlp import analyze_text
+from analysis.narrative import NarrativeClusterEngine
 from alerts.utils import create_narrative_alert
 
 load_dotenv()
