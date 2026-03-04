@@ -70,10 +70,6 @@ def all_data(request):
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
 
-<<<<<<< HEAD
-@api_view(["POST"	])
-def x_view(request):
-=======
 def create_or_update_post(raw_tweet, username):
     tweet_id = raw_tweet.get("id")
     if not tweet_id:
@@ -95,7 +91,6 @@ def create_or_update_post(raw_tweet, username):
 
 @api_view(["POST"])
 def x_search(request):
->>>>>>> 7ef5a22b5e0ff0099341f567e186606f0624f61b
     username = request.data.get("username")
     username = username.lstrip("@")
     if not username:
