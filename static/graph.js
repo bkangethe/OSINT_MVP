@@ -63,26 +63,24 @@ async function loadGraph() {
 }
 
 function initGraph(graphData) {
+    const container = document.getElementById("graph");
+    container.innerHTML = "";
 
-    const graphContainer = document.getElementById("graph");
-    graphContainer.innerHTML = "";
+    const width = container.clientWidth;
+    const height = container.clientHeight;
 
-    const width = graphContainer.clientWidth;
-    const height = graphContainer.clientHeight;
-
-    const svg = d3.select("#graph")
+    const svg = d3.select(container)
         .append("svg")
         .attr("width", width)
         .attr("height", height)
-        .style("background", "#0f172a"); // deep slate navy
+        .style("background", "#0f172a"); // dark background
 
     // =============================
-    // DEFINITIONS
+    // DEFINITIONS: Arrow & Glow
     // =============================
-
     const defs = svg.append("defs");
 
-    // Arrow
+    // Arrow marker
     defs.append("marker")
         .attr("id", "arrow")
         .attr("viewBox", "0 -5 10 10")
@@ -95,14 +93,9 @@ function initGraph(graphData) {
         .attr("fill", "#64748b")
         .attr("d", "M0,-5L10,0L0,5");
 
-    // Soft glow filter
-    const glow = defs.append("filter")
-        .attr("id", "softGlow");
-
-    glow.append("feGaussianBlur")
-        .attr("stdDeviation", "6")
-        .attr("result", "blur");
-
+    // Soft glow
+    const glow = defs.append("filter").attr("id", "softGlow");
+    glow.append("feGaussianBlur").attr("stdDeviation", "6").attr("result", "blur");
     const merge = glow.append("feMerge");
     merge.append("feMergeNode").attr("in", "blur");
     merge.append("feMergeNode").attr("in", "SourceGraphic");
@@ -110,15 +103,10 @@ function initGraph(graphData) {
     // =============================
     // SCALES
     // =============================
-
     const sizeScale = d3.scaleLinear()
         .domain([0, d3.max(graphData.nodes, d => d.tweet_count)])
         .range([16, 38]);
 
-    const degreeMap = graphData.network_metrics.degree;
-    const centralNode = graphData.network_metrics.central_nodes?.degree;
-
-    // Sentiment per node fallback to global
     const polarity = graphData.global_stats?.average_sentiment?.polarity || 0;
 
     function sentimentColor(d) {
@@ -127,8 +115,24 @@ function initGraph(graphData) {
         return "#3b82f6";                         // neutral
     }
 
-    // SIMULATION
+    const centralNode = graphData.network_metrics.central_nodes?.degree;
 
+    // =============================
+    // ZOOMABLE GROUP
+    // =============================
+    const zoomGroup = svg.append("g");
+
+    const zoom = d3.zoom()
+        .scaleExtent([0.3, 3])
+        .on("zoom", (event) => {
+            zoomGroup.attr("transform", event.transform);
+        });
+
+    svg.call(zoom);
+
+    // =============================
+    // FORCE SIMULATION
+    // =============================
     const simulation = d3.forceSimulation(graphData.nodes)
         .force("link", d3.forceLink(graphData.edges)
             .id(d => d.id)
@@ -137,9 +141,11 @@ function initGraph(graphData) {
         .force("charge", d3.forceManyBody().strength(-650))
         .force("center", d3.forceCenter(width / 2, height / 2));
 
+    // =============================
     // LINKS
-
-    const link = svg.append("g")
+    // =============================
+    const link = zoomGroup.append("g")
+        .attr("class", "links")
         .selectAll("line")
         .data(graphData.edges)
         .enter()
@@ -149,9 +155,10 @@ function initGraph(graphData) {
         .attr("marker-end", "url(#arrow)")
         .attr("opacity", 0.7);
 
+    // =============================
     // NODES
-
-    const nodeGroup = svg.append("g");
+    // =============================
+    const nodeGroup = zoomGroup.append("g").attr("class", "nodes");
 
     const node = nodeGroup.selectAll("circle")
         .data(graphData.nodes)
@@ -163,10 +170,26 @@ function initGraph(graphData) {
         .attr("stroke-width", d => d.id === centralNode ? 3 : 1.5)
         .attr("filter", d => d.id === centralNode ? "url(#softGlow)" : null)
         .style("cursor", "pointer")
-        .call(drag(simulation));
+        .call(d3.drag()
+            .on("start", (event, d) => {
+                if (!event.active) simulation.alphaTarget(0.3).restart();
+                d.fx = d.x;
+                d.fy = d.y;
+            })
+            .on("drag", (event, d) => {
+                d.fx = event.x;
+                d.fy = event.y;
+            })
+            .on("end", (event, d) => {
+                if (!event.active) simulation.alphaTarget(0);
+                d.fx = null;
+                d.fy = null;
+            })
+        );
 
-    // TOOLTIP 
-
+    // =============================
+    // TOOLTIP
+    // =============================
     const tooltip = d3.select("body")
         .append("div")
         .attr("class", "graph-tooltip")
@@ -181,13 +204,11 @@ function initGraph(graphData) {
         .style("pointer-events", "none")
         .style("display", "none");
 
-    node.on("mouseover", function(event, d) {
-
-        // Smooth highlight effect
+    node.on("mouseover", (event, d) => {
         node.transition().duration(200).attr("opacity", 0.3);
         link.transition().duration(200).attr("opacity", 0.1);
 
-        node.filter(n => 
+        node.filter(n =>
             n.id === d.id ||
             graphData.edges.some(e =>
                 (e.source.id === d.id && e.target.id === n.id) ||
@@ -195,30 +216,26 @@ function initGraph(graphData) {
             )
         ).transition().duration(200).attr("opacity", 1);
 
-        link.filter(l =>
-            l.source.id === d.id ||
-            l.target.id === d.id
-        ).transition().duration(200)
-         .attr("opacity", 1)
-         .attr("stroke", "#facc15");
+        link.filter(l => l.source.id === d.id || l.target.id === d.id)
+            .transition().duration(200)
+            .attr("opacity", 1)
+            .attr("stroke", "#facc15");
 
-        tooltip
-            .style("display", "block")
+        tooltip.style("display", "block")
             .html(`
                 <strong>${d.id}</strong><br>
                 Tweets: ${d.tweet_count}<br>
-                Degree: ${degreeMap[d.id] || 0}<br>
+                Degree: ${graphData.network_metrics.degree[d.id] || 0}<br>
                 Mentions: ${d.mentions?.join(", ") || "None"}<br>
                 URLs: ${d.urls?.length || 0}<br>
                 Sentiment: ${polarity.toFixed(2)}
             `);
     })
-    .on("mousemove", function(event) {
-        tooltip
-            .style("top", (event.pageY + 18) + "px")
-            .style("left", (event.pageX + 18) + "px");
+    .on("mousemove", (event) => {
+        tooltip.style("top", (event.pageY + 18) + "px")
+               .style("left", (event.pageX + 18) + "px");
     })
-    .on("mouseout", function() {
+    .on("mouseout", () => {
         node.transition().duration(200).attr("opacity", 1);
         link.transition().duration(200)
             .attr("opacity", 0.7)
@@ -228,29 +245,29 @@ function initGraph(graphData) {
     });
 
     // =============================
-    // BURST RING ANIMATION
+    // BURST RINGS
     // =============================
-
     if (graphData.clusters) {
         graphData.clusters.forEach(cluster => {
             if (cluster.emerging_burst && cluster.nodes) {
                 cluster.nodes.forEach(nodeId => {
-                    const burstNode = node.filter(d => d.id === nodeId);
+                    const targetNode = node.filter(d => d.id === nodeId);
+                    targetNode.each(d => {
+                        const ring = zoomGroup.append("circle")
+                            .attr("cx", d.x)
+                            .attr("cy", d.y)
+                            .attr("r", 20)
+                            .attr("stroke", "#f97316")
+                            .attr("stroke-width", 2)
+                            .attr("fill", "none")
+                            .attr("opacity", 0.7);
 
-                    const ring = svg.append("circle")
-                        .attr("cx", width/2)
-                        .attr("cy", height/2)
-                        .attr("r", 20)
-                        .attr("stroke", "#f97316")
-                        .attr("stroke-width", 2)
-                        .attr("fill", "none")
-                        .attr("opacity", 0.7);
-
-                    ring.transition()
-                        .duration(1500)
-                        .attr("r", 60)
-                        .attr("opacity", 0)
-                        .remove();
+                        ring.transition()
+                            .duration(1500)
+                            .attr("r", 60)
+                            .attr("opacity", 0)
+                            .remove();
+                    });
                 });
             }
         });
@@ -259,8 +276,7 @@ function initGraph(graphData) {
     // =============================
     // LABELS
     // =============================
-
-    const label = svg.append("g")
+    const label = zoomGroup.append("g")
         .selectAll("text")
         .data(graphData.nodes)
         .enter()
@@ -271,11 +287,9 @@ function initGraph(graphData) {
         .attr("text-anchor", "middle");
 
     // =============================
-    // TICK
+    // SIMULATION TICK
     // =============================
-
     simulation.on("tick", () => {
-
         link
             .attr("x1", d => d.source.x)
             .attr("y1", d => d.source.y)
@@ -291,49 +305,25 @@ function initGraph(graphData) {
             .attr("y", d => d.y - 28);
     });
 
-    function drag(simulation){
-        function dragstarted(event, d){
-            if (!event.active) simulation.alphaTarget(0.3).restart();
-            d.fx = d.x;
-            d.fy = d.y;
-        }
-        function dragged(event, d){
-            d.fx = event.x;
-            d.fy = event.y;
-        }
-        function dragended(event, d){
-            if (!event.active) simulation.alphaTarget(0);
-            d.fx = null;
-            d.fy = null;
-        }
-        return d3.drag()
-            .on("start", dragstarted)
-            .on("drag", dragged)
-            .on("end", dragended);
-    }
-    
-    // ====== NETWORK METRICS PANEL ======
-    const metricsContainer = document.getElementById("network-metrics");
-
-    metricsContainer.innerHTML = `
+    // =============================
+    // NETWORK METRICS PANEL
+    // =============================
+    const metrics = graphData.network_metrics;
+    document.getElementById("network-metrics").innerHTML = `
         <div class="bg-black/50 p-6 rounded-xl">
             <p class="text-gray-400 text-sm">Network Density</p>
-            <p class="text-2xl font-bold">${graphData.network_metrics.density.toFixed(3)}</p>
+            <p class="text-2xl font-bold">${metrics.density.toFixed(3)}</p>
         </div>
-
         <div class="bg-black/50 p-6 rounded-xl">
             <p class="text-gray-400 text-sm">Average Degree</p>
-            <p class="text-2xl font-bold">${graphData.network_metrics.average_degree.toFixed(2)}</p>
+            <p class="text-2xl font-bold">${metrics.average_degree.toFixed(2)}</p>
         </div>
-
         <div class="bg-black/50 p-6 rounded-xl">
             <p class="text-gray-400 text-sm">Most Central (Degree)</p>
             <p class="text-2xl font-bold text-blue-400">
-                ${graphData.network_metrics.central_nodes.degree}
+                ${metrics.central_nodes.degree}
             </p>
         </div>
     `;
 }
-
 loadGraph();
-

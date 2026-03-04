@@ -25,25 +25,34 @@ from api import serializers
 def index(request):
     profiles_data = Profile.objects.all()
     profiles = serializers.ProfileSerializer(profiles_data, many=True).data
-    num_posts = Post.objects.count()
-    alerts = Post.objects.filter(
+
+    # aletrs 
+    alerts = serializers.PostSerializer(
+        Post.objects.filter(
         Q(text_analysis__risk="high") |  # hard
         Q(text_analysis__risk="medium", text_analysis__score__gt=0.8) |  # medium
         Q(text_analysis__risk="low", text_analysis__polarity__lt=-0.5)  # soft
-    )
+    ),many=True).data
 
-    flagged = Post.objects.filter(text_analysis__risk="high")
+    # flagged posts
+    flagged = serializers.PostSerializer(Post.objects.filter(text_analysis__risk="high"),many=True).data
 
     # filterd posts
     filtered_posts = serializers.PostSerializer(Post.objects.filter(text_analysis__sentiment="negative"), many=True).data
 
+    # all posts 
+    all_posts = serializers.PostSerializer(Post.objects.all(),many=True).data
+
+    # paginated
+    view = XPostListCreateView.as_view()
+    all_posts_paginated = view(request) 
  
     context = {
         "profiles": profiles,
-        "num_posts": num_posts,
         "filtered_posts": filtered_posts,
-        "alerts_count": alerts.count(),
-        "flagged_count": flagged.count(),
+        "alerts": alerts,
+        "flagged": flagged,
+        "all": all_posts_paginated.data
     }
 
     return render(request,"index.html", context=context)
@@ -283,7 +292,7 @@ def nlp_analysis(request):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
-@api_view(["POST","GET"])
+@api_view(["GET"])
 def narrative_clustering(request):
     data = serializers.PostSerializer(Post.objects.all()[:40], many=True).data
     texts = [item["text"] for item in data]
@@ -339,7 +348,6 @@ def narrative_clustering(request):
 @api_view(["POST"])
 def summary_view(request):
     text = request.data.get("text")
-    print(text)
     if not text:
         return Response(
             {"error": "Missing 'text' in request data"},

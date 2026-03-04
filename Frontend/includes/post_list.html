@@ -1,0 +1,30 @@
+<button type="button" class="w-full text-left" data-bs-toggle="modal" data-bs-target="#postModal"
+    data-username="{{ post.username }}" data-text="{{ post.text | escape }}" data-url="{{ post.url }}"
+    data-label="{{ post.text_analysis.label }}" data-risk="{{ post.text_analysis.risk }}"
+    data-score="{{ post.text_analysis.score }}" data-sentiment="{{ post.text_analysis.sentiment }}"
+    data-polarity="{{ post.text_analysis.polarity }}" data-date="{{ post.date }}" data-likes="{{ post.like_count }}"
+    data-retweets="{{ post.retweet_count }}" data-replies="{{ post.reply_count }}" data-quotes="{{ post.quote_count }}">
+    <div class="glass-card p-6 rounded-xl hover:bg-gray-800 transition">
+        <div class="flex text-sm justify-between py-1 font-semibold">
+            <p>{{ post.username }}</p>
+            <p class="font-light text-sm">{{ post.date }}</p>
+        </div>
+        <p class="text-gray-400 my-2">{{ post.text }}</p>
+        <div class="flex justify-between text-sm text-gray-400">
+            <div class="space-x-4">
+                <span>Cluster...</span>
+                <a href="{{ post.url }}" target="_blank" rel="noopener noreferrer" class="text-blue-300">View on X</a>
+            </div>
+            <span class="font-semibold
+                                {% if post.text_analysis.risk == 'high' %}
+                                    text-red-500
+                                {% elif post.text_analysis.risk == 'medium' %}
+                                    text-yellow-400
+                                {% else %}
+                                    text-green-400
+                                {% endif %}">
+                {{ post.text_analysis.risk }}
+            </span>
+        </div>
+    </div>
+</button>
