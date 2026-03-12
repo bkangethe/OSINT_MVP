@@ -19,6 +19,12 @@ from analysis import nlp, narrative, llm_summary
 from analysis.graph import Graph
 from api.models import Profile, Platform, Target, RawJSONData, Post
 from api import serializers
+from api.utils.narrative_detection import detect_narrative_surges
+from api.utils.geolocation import extract_geo_mentions
+from api.utils.timeline import narrative_timeline
+from api.utils.intel_brief import generate_daily_brief
+from api.utils.risk_scoring import calculate_risk_scores    
+from Scrapers.telegram_scraper import run_telegram_scraper
 
 
 @login_required
@@ -399,3 +405,53 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     return redirect("login")
+
+@api_view(["GET"])
+def narrative_surges(request):
+    surges = detect_narrative_surges()
+    return Response({"surges": surges})
+
+@api_view(["GET"])
+def geolocation_analysis(request):
+    mentions = extract_geo_mentions()
+    return Response({"mentions": mentions})
+
+@api_view(["GET"])
+def narrative_timeline(request):
+    keyword = request.data.get("keyword")
+    if not keyword:
+        return Response(
+            {"error": "Missing 'keyword' in request data"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    timeline = narrative_timeline(keyword)
+    return Response({"timeline": timeline})
+
+@api_view(["GET"])
+def intel_brief(request):
+    brief = generate_daily_brief()
+    return Response({"brief": brief})
+
+@api_view(["GET"])
+def risk_scoring(request):
+    results = calculate_risk_scores()
+    return Response({"results": results})  
+
+@api_view(["GET"])
+def telegram_scrape(request):
+    """
+    Scrape multiple channels and return messages + surge stats.
+    Example: /api/telegram-scrape?channels=cnn,bbcnews
+    """
+    channels_param = request.GET.get("channels", "cnn")
+    channels = [c.strip() for c in channels_param.split(",")]
+
+    limit = int(request.GET.get("limit", 100))
+
+    data = run_telegram_scraper(channels, limit)
+
+    return Response({
+        "status": "success",
+        "channels_scraped": len(channels),
+        "data": data
+    })

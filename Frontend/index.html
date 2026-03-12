@@ -4,6 +4,26 @@
 
 <!-- MAIN CONTAINER -->
 <div class="relative max-w-7xl mx-auto p-8">
+    <!-- LIVE THREAT FEED -->
+
+<div class="mb-8">
+
+    <div class="flex items-center gap-3 mb-3">
+        <i class="bi bi-exclamation-triangle-fill text-red-400"></i>
+        <h2 class="text-xl font-bold text-red-400">Live Threat Feed</h2>
+    </div>
+
+    <div id="threat-feed"
+         class="glass-card p-4 rounded-xl bg-red-900/20 border border-red-500
+         max-h-40 overflow-y-auto space-y-2">
+
+        <p class="text-sm text-gray-300">
+            Monitoring narrative threats...
+        </p>
+
+    </div>
+
+</div>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
         <!-- Flagged (High Risk) -->
         <div data-bs-toggle="modal" data-bs-target="#flaggedModal"
@@ -40,6 +60,232 @@
         </div>
 
     </div>
+    <!-- INTELLIGENCE MODULES -->
+
+<div class="mt-12">
+
+    <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+        <i class="bi bi-cpu"></i> Intelligence Modules
+    </h2>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+
+        <!-- X SEARCH -->
+        <a href="/api/x-search">
+            <div class="glass-card p-5 rounded-xl hover:scale-105 transition cursor-pointer">
+                <p class="text-xs text-gray-400 uppercase">Collection</p>
+                <h3 class="font-bold text-lg flex items-center gap-2">
+                    <i class="bi bi-twitter-x"></i> X Search
+                </h3>
+                <p class="text-xs text-gray-400 mt-2">
+                    Collect posts from X
+                </p>
+            </div>
+        </a>
+
+        <!-- FACEBOOK -->
+        <a href="/api/facebook">
+            <div class="glass-card p-5 rounded-xl hover:scale-105 transition cursor-pointer">
+                <p class="text-xs text-gray-400 uppercase">Collection</p>
+                <h3 class="font-bold text-lg flex items-center gap-2">
+                    <i class="bi bi-facebook"></i> Facebook Monitor
+                </h3>
+                <p class="text-xs text-gray-400 mt-2">
+                    Monitor Facebook narratives
+                </p>
+            </div>
+        </a>
+
+        <!-- INSTAGRAM -->
+        <a href="/api/instagram">
+            <div class="glass-card p-5 rounded-xl hover:scale-105 transition cursor-pointer">
+                <p class="text-xs text-gray-400 uppercase">Collection</p>
+                <h3 class="font-bold text-lg flex items-center gap-2">
+                    <i class="bi bi-instagram"></i> Instagram Monitor
+                </h3>
+                <p class="text-xs text-gray-400 mt-2">
+                    Track Instagram signals
+                </p>
+            </div>
+        </a>
+
+        <!-- NLP ANALYSIS -->
+        <a href="/api/nlp">
+            <div class="glass-card p-5 rounded-xl hover:scale-105 transition cursor-pointer">
+                <p class="text-xs text-gray-400 uppercase">AI Analysis</p>
+                <h3 class="font-bold text-lg flex items-center gap-2">
+                    <i class="bi bi-robot"></i> NLP Analysis
+                </h3>
+                <p class="text-xs text-gray-400 mt-2">
+                    Run language analysis
+                </p>
+            </div>
+        </a>
+
+        <!-- GRAPH ANALYSIS -->
+        <a href="/api/graph">
+            <div class="glass-card p-5 rounded-xl hover:scale-105 transition cursor-pointer">
+                <p class="text-xs text-gray-400 uppercase">Network</p>
+                <h3 class="font-bold text-lg flex items-center gap-2">
+                    <i class="bi bi-diagram-3"></i> Graph Analysis
+                </h3>
+                <p class="text-xs text-gray-400 mt-2">
+                    Visualize influence networks
+                </p>
+            </div>
+        </a>
+
+        <!-- NARRATIVE CLUSTERING -->
+        <a href="/api/narrative">
+            <div class="glass-card p-5 rounded-xl hover:scale-105 transition cursor-pointer">
+                <p class="text-xs text-gray-400 uppercase">Narratives</p>
+                <h3 class="font-bold text-lg flex items-center gap-2">
+                    <i class="bi bi-chat-square-text"></i> Narrative Clustering
+                </h3>
+                <p class="text-xs text-gray-400 mt-2">
+                    Detect narrative clusters
+                </p>
+            </div>
+        </a>
+
+        <!-- NARRATIVE SURGES -->
+        <a href="/api/narratives/surges/">
+            <div class="glass-card p-5 rounded-xl hover:scale-105 transition cursor-pointer bg-red-900/30 border border-red-500">
+                <p class="text-xs text-red-300 uppercase">Threat Detection</p>
+                <h3 class="font-bold text-lg flex items-center gap-2 text-red-400">
+                    <i class="bi bi-lightning-charge"></i> Narrative Surges
+                </h3>
+                <p class="text-xs text-red-200 mt-2">
+                    Detect narrative spikes
+                </p>
+            </div>
+        </a>
+
+        <!-- TIMELINE -->
+        <a href="/api/narratives/timeline/">
+            <div class="glass-card p-5 rounded-xl hover:scale-105 transition cursor-pointer">
+                <p class="text-xs text-gray-400 uppercase">Temporal Analysis</p>
+                <h3 class="font-bold text-lg flex items-center gap-2">
+                    <i class="bi bi-clock-history"></i> Narrative Timeline
+                </h3>
+                <p class="text-xs text-gray-400 mt-2">
+                    Track narrative evolution
+                </p>
+            </div>
+        </a>
+
+        <!-- GEO MENTIONS -->
+        <a href="/api/geolocation/mentions/">
+            <div class="glass-card p-5 rounded-xl hover:scale-105 transition cursor-pointer">
+                <p class="text-xs text-gray-400 uppercase">Geospatial</p>
+                <h3 class="font-bold text-lg flex items-center gap-2">
+                    <i class="bi bi-geo-alt"></i> Geo Mentions
+                </h3>
+                <p class="text-xs text-gray-400 mt-2">
+                    Map narrative locations
+                </p>
+            </div>
+        </a>
+
+        <!-- DAILY INTEL BRIEF -->
+        <a href="/api/intel/brief/">
+            <div class="glass-card p-5 rounded-xl hover:scale-105 transition cursor-pointer bg-blue-900/30 border border-blue-500">
+                <p class="text-xs text-blue-300 uppercase">Reporting</p>
+                <h3 class="font-bold text-lg flex items-center gap-2 text-blue-400">
+                    <i class="bi bi-journal-text"></i> Intelligence Brief
+                </h3>
+                <p class="text-xs text-blue-200 mt-2">
+                    Generate daily intelligence reports
+                </p>
+            </div>
+        </a>
+
+        <!-- AI SUMMARY -->
+        <a href="/api/summary">
+            <div class="glass-card p-5 rounded-xl hover:scale-105 transition cursor-pointer">
+                <p class="text-xs text-gray-400 uppercase">AI</p>
+                <h3 class="font-bold text-lg flex items-center gap-2">
+                    <i class="bi bi-stars"></i> AI Summary
+                </h3>
+                <p class="text-xs text-gray-400 mt-2">
+                    Generate intelligence summaries
+                </p>
+            </div>
+        </a>
+
+        <!-- DATA CHECK -->
+        <a href="/api/check">
+            <div class="glass-card p-5 rounded-xl hover:scale-105 transition cursor-pointer">
+                <p class="text-xs text-gray-400 uppercase">Data</p>
+                <h3 class="font-bold text-lg flex items-center gap-2">
+                    <i class="bi bi-database"></i> Data Check
+                </h3>
+                <p class="text-xs text-gray-400 mt-2">
+                    View collected data
+                </p>
+            </div>
+        </a>
+
+    </div>
+    <!-- TELEGRAM SCRAPER -->
+    <div onclick="runTelegramScraper()" class="glass-card p-5 rounded-xl hover:scale-105 transition cursor-pointer bg-purple-900/20 border border-purple-500">
+        <p class="text-xs text-purple-300 uppercase">Collection</p>
+        <h3 class="font-bold text-lg flex items-center gap-2 text-purple-400">
+            <i class="bi bi-telegram"></i> Telegram Scraper
+        </h3>
+        <p class="text-xs text-purple-200 mt-2">
+            Scrape Telegram channels and track message surges
+        </p>
+    </div>
+    
+    <script>
+    async function runTelegramScraper(){
+        const channels = prompt("Enter Telegram channels separated by comma", "cnn,bbcnews");
+        const limit = prompt("Number of messages per channel", "50");
+        const url = `/api/telegram/scraper/?channels=cnn,bbcnews&limit=50`;
+    
+        try{
+            const res = await fetch(url);
+            const data = await res.json();
+            console.log("Telegram data:", data);
+    
+            alert(`Fetched ${Object.keys(data.data).length} channels. Check console for details.`);
+        }catch(e){
+            console.error("Telegram scraper error:", e);
+            alert("Error fetching Telegram data. Check console.");
+        }
+    }
+    </script>
+     <div class="glass-card p-5 rounded-xl hover:scale-105 transition cursor-pointer bg-purple-900/20 border border-purple-500">
+        <p class="text-xs text-purple-300 uppercase">Collection</p>
+        <h3 class="font-bold text-lg flex items-center gap-2 text-purple-400">
+            <i class="bi bi-telegram"></i> Telegram Scraper
+        </h3>
+        <p class="text-xs text-purple-200 mt-2">
+            Scrape Telegram channels and track message surges
+        </p>
+    </div>
+</a>
+    <!-- NARRATIVE RISK PANEL -->
+
+<div class="mt-10">
+
+    <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+    <i class="bi bi-shield-exclamation"></i>
+    Narrative Risk Monitor
+    </h2>
+    
+    <div id="risk-container"
+         class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    
+    <p class="text-gray-400">Calculating narrative risk...</p>
+    
+    </div>
+    
+    </div>
+    
+
+</div>
 
     <!-- PROFILES + POSTS ROW -->
     <div class="flex flex-col lg:flex-row gap-8 h-[700px]">
@@ -130,11 +376,136 @@
         <div id="network-metrics" class="grid grid-cols-3 gap-6 my-3"></div>
 
     </div>
+    
 
 </div>
 
 {% endblock %}
+<script>
 
+    async function loadThreatFeed() {
+    
+        try {
+    
+            const response = await fetch("/api/narratives/surges/")
+            const data = await response.json()
+    
+            const container = document.getElementById("threat-feed")
+    
+            container.innerHTML = ""
+    
+            if (!data.surges || data.surges.length === 0) {
+    
+                container.innerHTML =
+                `<p class="text-green-400 text-sm">
+                No active narrative threats detected
+                </p>`
+    
+                return
+            }
+    
+            data.surges.forEach(surge => {
+    
+                const item = document.createElement("div")
+    
+                item.className = "text-sm text-red-300 border-b border-red-800 pb-2"
+    
+                item.innerHTML = `
+                    <span class="font-bold text-red-400">
+                        ${surge.narrative}
+                    </span>
+                    surge detected —
+                    ${surge.recent_mentions} mentions
+                    (previous ${surge.previous_mentions})
+                `
+    
+                container.appendChild(item)
+    
+            })
+    
+        }
+    
+        catch (error) {
+    
+            console.error("Threat feed error:", error)
+    
+        }
+    
+    }
+    
+    loadThreatFeed()
+    
+    setInterval(loadThreatFeed, 15000)
+    
+    </script>
+    <script>
+
+        async function loadNarrativeRisk(){
+        
+            try{
+        
+                const res = await fetch("/api/narratives/risk/")
+                const data = await res.json()
+        
+                const container = document.getElementById("risk-container")
+        
+                container.innerHTML = ""
+        
+                data.risks.slice(0,8).forEach(risk => {
+        
+                    let color = "text-green-400"
+        
+                    if(risk.level === "HIGH"){
+                        color = "text-red-400"
+                    }
+                    else if(risk.level === "MEDIUM"){
+                        color = "text-yellow-400"
+                    }
+        
+                    const card = document.createElement("div")
+        
+                    card.className = "glass-card p-5 rounded-xl"
+        
+                    card.innerHTML = `
+        
+                    <p class="text-xs text-gray-400 uppercase">
+                    Narrative
+                    </p>
+        
+                    <h3 class="text-lg font-bold">
+                    ${risk.narrative}
+                    </h3>
+        
+                    <p class="text-sm mt-2">
+                    Volume: ${risk.volume}
+                    </p>
+        
+                    <p class="text-sm font-bold ${color}">
+                    Risk Score: ${risk.risk_score}
+                    (${risk.level})
+                    </p>
+        
+                    `
+        
+                    container.appendChild(card)
+        
+                })
+        
+            }
+        
+            catch(e){
+        
+                console.error("Risk system error", e)
+        
+            }
+        
+        }
+        
+        loadNarrativeRisk()
+        
+        setInterval(loadNarrativeRisk,20000)
+        
+        </script>
 </body>
 
 </html>
