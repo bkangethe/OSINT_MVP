@@ -1,0 +1,141 @@
+<!-- includes/metric_posts.html -->
+<div class="modal fade bg-black/50 backdrop-blur-sm" id="{{ div_id }}" tabindex="-1" aria-hidden="true">
+
+  <div class="modal-dialog  modal-xl">
+    <div
+      class="modal-content bg-gray-950 text-gray-200 border border-gray-800 rounded-xl shadow-2xl h-[92vh] flex flex-col overflow-hidden">
+
+      <!-- Header -->
+      <div class="px-6 py-4 border-b border-gray-800">
+        <h2 class="text-lg font-semibold text-yellow-400 uppercase tracking-wide">
+          {{ title }}
+        </h2>
+      </div>
+
+      <!-- Body -->
+      <div class="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+
+        {% for alert in alerts %}
+
+        <!-- ALERT CARD -->
+        <div class="border border-gray-800 rounded-lg bg-gray-900 hover:bg-gray-800/60 transition">
+
+          <div class="flex">
+
+            <!-- Severity Bar -->
+            <div class="w-1.5
+              {% if alert.severity == 'high' %}
+                bg-red-500
+              {% elif alert.severity == 'medium' %}
+                bg-yellow-400
+              {% else %}
+                bg-green-400
+              {% endif %}">
+            </div>
+
+            <!-- Content -->
+            <div class="flex-1 p-4">
+
+              <!-- Top Row -->
+              <div class="flex justify-between items-center mb-2">
+                <div>
+                  <p class="font-semibold text-white">
+                    {{ alert.title }}
+                  </p>
+                  <p class="text-xs text-gray-500">
+                    {{ alert.created_at }}
+                  </p>
+                </div>
+
+                <span class="text-xs px-2 py-1 rounded font-semibold
+                  {% if alert.severity == 'high' %}
+                    bg-red-500/10 text-red-400
+                  {% elif alert.severity == 'medium' %}
+                    bg-yellow-500/10 text-yellow-300
+                  {% else %}
+                    bg-green-500/10 text-green-400
+                  {% endif %}">
+                  {{ alert.severity|upper }}
+                </span>
+              </div>
+
+              <!-- Description -->
+              <p class="text-sm text-gray-300 mb-3">
+                {{ alert.description }}
+              </p>
+
+              <!-- Cluster Info -->
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs mb-4">
+
+                <div class="bg-gray-800/60 p-2 rounded">
+                  <p class="text-gray-400">Cluster</p>
+                  <p class="text-white font-semibold">#{{ alert.cluster_id }}</p>
+                </div>
+
+                <div class="bg-gray-800/60 p-2 rounded">
+                  <p class="text-gray-400">Size</p>
+                  <p class="text-white font-semibold">{{ alert.cluster_size }}</p>
+                </div>
+
+                <div class="bg-gray-800/60 p-2 rounded">
+                  <p class="text-gray-400">Coordination</p>
+                  <p class="text-white font-semibold">
+                    {{ alert.coordination_score }}
+                  </p>
+                </div>
+
+                <div class="bg-gray-800/60 p-2 rounded">
+                  <p class="text-gray-400">Status</p>
+                  <p class="font-semibold
+                    {% if alert.is_acknowledged %}
+                      text-blue-400
+                    {% elif alert.is_dismissed %}
+                      text-gray-500
+                    {% else %}
+                      text-yellow-400
+                    {% endif %}">
+                    {% if alert.is_acknowledged %}
+                    Acknowledged
+                    {% elif alert.is_dismissed %}
+                    Dismissed
+                    {% else %}
+                    Active
+                    {% endif %}
+                  </p>
+                </div>
+
+              </div>
+
+              <!-- Sample Tweets -->
+              <div class="space-y-2 border-t border-gray-800 pt-3">
+
+                <p class="text-xs text-gray-500 uppercase">Sample Evidence</p>
+
+                {% for tweet in alert.sample_tweets %}
+                <div class="bg-gray-800/60 rounded p-2 text-xs text-gray-300 leading-snug">
+                  {{ tweet }}
+                </div>
+                {% endfor %}
+
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        {% empty %}
+        <div class="text-center text-gray-500 py-10">
+          No alerts found.
+        </div>
+        {% endfor %}
+
+      </div>
+
+      <!-- Footer -->
+      <div class="border-t border-gray-800 px-6 py-3 text-xs text-gray-500">
+        Monitoring system • Real-time alerts
+      </div>
+
+    </div>
+  </div>
+</div>

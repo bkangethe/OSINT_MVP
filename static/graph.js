@@ -1,4 +1,5 @@
 let graphUrl = "/api/graph";
+let graphDescription = "";
 
 function getCookie(name) {
     let cookieValue = null;
@@ -17,28 +18,90 @@ function getCookie(name) {
 
 const csrftoken = getCookie("csrftoken");
 
-async function renderSummary(summary) {
-    const summaryUrl = "/api/summary";
+function initializeTooltipSystem() {
+    const tooltip = document.createElement("div");
+    tooltip.className = `fixed z-50 px-4 py-2 text-sm bg-gray-900/90 backdrop-blur-md border border-gray-700 text-gray-200 rounded-xl shadow-xl opacity-0 pointer-events-none transition-all duration-200`; 
+    document.body.appendChild(tooltip);
 
-    try {
-        const response = await fetch(summaryUrl, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": csrftoken
-            },
-            body: JSON.stringify({ text: summary }) 
-        });
+    const summaryCache = {};
+    const loading = {};
+    let activeIcon = null;
 
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const data = await response.json();
+    document.addEventListener("mouseover", async e => {
+        const icon = e.target.closest(".info-icon");
+        if (!icon) return;
 
-        document.getElementById("ai-summary-text").textContent = data.summary || "No summary available.";
-    } catch (err) {
-        console.error("Failed to fetch AI summary:", err);
-        document.getElementById("ai-summary-text").textContent = "Error fetching summary.";
+        activeIcon = icon;
+        const key = icon.id;
+        const text = icon.dataset.tooltip || "";
+
+        // Optional: special case for graph
+        // if (key === "graphAnalysis" && graphDescription) {
+        //     text = graphDescription;
+        // }
+
+        tooltip.classList.remove("opacity-0");
+        tooltip.classList.add("opacity-100");
+
+        if (summaryCache[key]) {
+            tooltip.textContent = summaryCache[key];
+            return;
+        }
+
+        if (loading[key]) {
+            tooltip.textContent = "Loading AI summary...";
+            return;
+        }
+
+        loading[key] = true;
+        tooltip.textContent = "Loading AI summary...";
+
+        try {
+            const data = await fetchSummary(text);
+            const summary = data.summary || "No summary available.";
+            summaryCache[key] = summary;
+            if (activeIcon === icon) tooltip.textContent = summary;
+        } catch (err) {
+            tooltip.textContent = "Failed to load summary.";
+            console.error(err);
+        } finally {
+            loading[key] = false;
+        }
+    });
+
+    document.addEventListener("mousemove", e => {
+        if (!activeIcon) return;
+        tooltip.style.top = `${e.clientY + 15}px`;
+        tooltip.style.left = `${e.clientX + 15}px`;
+    });
+
+    document.addEventListener("mouseout", e => {
+        if (!e.target.closest(".info-icon")) return;
+        tooltip.classList.remove("opacity-100");
+        tooltip.classList.add("opacity-0");
+        activeIcon = null;
+    });
+};
+
+// API call
+async function fetchSummary(text) {
+
+    const response = await fetch("/api/summary", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrftoken
+        },
+        body: JSON.stringify({ text })
+    });
+
+    if (!response.ok) {
+        throw new Error(`HTTP error: ${response.status}`);
     }
-}
+
+    return await response.json();
+} 
+
 
 async function loadGraph() {
     const loadingOverlay = document.getElementById("graph-loading");
@@ -53,8 +116,14 @@ async function loadGraph() {
         initGraph(graphData);
 
 
-        const aiSummary = Data.description || "No summary available.";
+        graphDescription = Data.description || "No summary available.";
         // renderSummary(aiSummary);
+        const graphIcon = document.getElementById("graphAnalysis");
+        if (graphIcon) {
+            graphIcon.dataset.tooltip = graphDescription;
+            // Optional: clear cache so next hover re-fetches summary
+            // summaryCache["graphAnalysis"] = null;
+        }
 
     } catch (error) {
         loadingOverlay.innerHTML = "<p style='color:white'>Failed to load graph</p>";
@@ -231,18 +300,18 @@ function initGraph(graphData) {
                 Sentiment: ${polarity.toFixed(2)}
             `);
     })
-    .on("mousemove", (event) => {
-        tooltip.style("top", (event.pageY + 18) + "px")
-               .style("left", (event.pageX + 18) + "px");
-    })
-    .on("mouseout", () => {
-        node.transition().duration(200).attr("opacity", 1);
-        link.transition().duration(200)
-            .attr("opacity", 0.7)
-            .attr("stroke", "#334155");
+        .on("mousemove", (event) => {
+            tooltip.style("top", (event.pageY + 18) + "px")
+                .style("left", (event.pageX + 18) + "px");
+        })
+        .on("mouseout", () => {
+            node.transition().duration(200).attr("opacity", 1);
+            link.transition().duration(200)
+                .attr("opacity", 0.7)
+                .attr("stroke", "#334155");
 
-        tooltip.style("display", "none");
-    });
+            tooltip.style("display", "none");
+        });
 
     // =============================
     // BURST RINGS
@@ -326,4 +395,8 @@ function initGraph(graphData) {
         </div>
     `;
 }
-loadGraph();
+
+document.addEventListener("DOMContentLoaded", () => {
+    loadGraph();
+    initializeTooltipSystem();
+});

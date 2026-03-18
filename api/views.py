@@ -8,10 +8,13 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
+from rest_framework.views import APIView
+from asgiref.sync import async_to_sync
 from collections import Counter
 import numpy as np
 from datetime import datetime
 from django.db.models import Q
+from django.views.decorators.csrf import csrf_exempt
 
 from .forms import SignupForm, LoginForm
 from Scrapers import x, facebook, instagram, osint
@@ -24,7 +27,9 @@ from api.utils.geolocation import extract_geo_mentions
 from api.utils.timeline import narrative_timeline
 from api.utils.intel_brief import generate_daily_brief
 from api.utils.risk_scoring import calculate_risk_scores    
-from Scrapers.telegram_scraper import run_telegram_scraper
+from Scrapers import telegram_scraper as telegram
+from alerts.serializers import AlertSerializer
+from alerts.models import Alert
 
 
 @login_required
@@ -33,12 +38,13 @@ def index(request):
     profiles = serializers.ProfileSerializer(profiles_data, many=True).data
 
     # aletrs 
-    alerts = serializers.PostSerializer(
-        Post.objects.filter(
-        Q(text_analysis__risk="high") |  # hard
-        Q(text_analysis__risk="medium", text_analysis__score__gt=0.8) |  # medium
-        Q(text_analysis__risk="low", text_analysis__polarity__lt=-0.5)  # soft
-    ),many=True).data
+    # alerts = serializers.PostSerializer(
+    #     Post.objects.filter(
+    #     Q(text_analysis__risk="high") |  # hard
+    #     Q(text_analysis__risk="medium", text_analysis__score__gt=0.8) |  # medium
+    #     Q(text_analysis__risk="low", text_analysis__polarity__lt=-0.5)  # soft
+    # ),many=True).data
+    alerts = AlertSerializer(Alert.objects.all(),many=True).data
 
     # flagged posts
     flagged = serializers.PostSerializer(Post.objects.filter(text_analysis__risk="high"),many=True).data
@@ -279,7 +285,7 @@ def graph_analysis(request):
     return Response({"description": description,
                      "graph": graph_dict}, status=status.HTTP_200_OK)
 
-
+@csrf_exempt
 @api_view(["POST"])
 def nlp_analysis(request):
     text = request.data.get("text")
@@ -351,6 +357,7 @@ def narrative_clustering(request):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
+@csrf_exempt
 @api_view(["POST"])
 def summary_view(request):
     text = request.data.get("text")
@@ -370,6 +377,36 @@ def summary_view(request):
         )
     
 
+class TelegramScrapeAPIView(APIView):
+
+    def get(self, request):
+        serializer = serializers.TelegramScrapeSerializer(data=request.query_params)
+
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        validated_data = serializer.validated_data
+
+        scraper = telegram.TelegramScraper()
+
+        # Run async scraper safely inside sync view
+        result = async_to_sync(scraper.search_telegram)(
+            target=validated_data["target"],
+            message_limit=validated_data.get("message_limit"),
+            user_limit=validated_data.get("user_limit"),
+
+            # Pass only keyword_groups and custom_keywords
+            keyword_groups=validated_data.get("keyword_groups"),
+            custom_keywords=validated_data.get("custom_keywords"),
+
+            # Don't pass join_before_scrape here!
+            include_users=validated_data.get("include_users"),
+        )
+        print(result)
+        if result.get("error"):
+            return Response(result, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(result, status=status.HTTP_200_OK)
 
 def signup_view(request):
     if request.method == "POST":

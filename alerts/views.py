@@ -1,57 +1,33 @@
-from rest_framework.decorators import api_view
+from django.shortcuts import render
+from django.core.mail import send_mail
+from django.conf import settings
 from rest_framework.response import Response
-from rest_framework import status
-from .models import Alert
+from rest_framework.decorators import api_view
 
+
+from  alerts.models import Alert
+from alerts.serializers import AlertSerializer
+
+# Create your views here.
+
+
+def sending_mail(subject, message):
+    try:
+        send_mail(
+            subject=subject,
+            message=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=['thingamajig74@gmail.com'],
+            fail_silently=False,
+        )
+        return Response({"message": "Email sent"},status=200)
+    
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
+    
 
 @api_view(["GET"])
-def alert_history(request):
-    """
-    Get all alerts (Alert History)
-    """
-    alerts = Alert.objects.all().order_by("-created_at")
+def alert_history(requests):
+    data = AlertSerializer(Alert.objects.all(),many=True).data
 
-    data = [
-        {
-            "id": alert.id,
-            "title": alert.title,
-            "description": alert.description,
-            "severity": alert.severity,
-            "cluster_size": alert.cluster_size,
-            "avg_risk": alert.avg_risk,
-            "is_acknowledged": alert.is_acknowledged,
-            "is_dismissed": alert.is_dismissed,
-            "created_at": alert.created_at,
-        }
-        for alert in alerts
-    ]
-
-    return Response(data)
-
-
-@api_view(["POST"])
-def acknowledge_alert(request, alert_id):
-    """
-    Mark alert as acknowledged
-    """
-    try:
-        alert = Alert.objects.get(id=alert_id)
-        alert.is_acknowledged = True
-        alert.save()
-        return Response({"message": "Alert acknowledged"})
-    except Alert.DoesNotExist:
-        return Response({"error": "Alert not found"}, status=404)
-
-
-@api_view(["POST"])
-def dismiss_alert(request, alert_id):
-    """
-    Mark alert as dismissed
-    """
-    try:
-        alert = Alert.objects.get(id=alert_id)
-        alert.is_dismissed = True
-        alert.save()
-        return Response({"message": "Alert dismissed"})
-    except Alert.DoesNotExist:
-        return Response({"error": "Alert not found"}, status=404)
+    return Response({"data":data}, status=200)

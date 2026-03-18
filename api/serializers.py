@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
+from datetime import datetime
 
 from api.models import Post, Profile, Platform
 
@@ -49,3 +50,26 @@ class UserSignupSerializer(serializers.ModelSerializer):
             email=validated_data.get("email", "")
         )
         return user
+    
+class TelegramScrapeSerializer(serializers.Serializer):
+    target = serializers.CharField(required=True)
+    message_limit = serializers.IntegerField(required=False, default=25, min_value=1)
+    user_limit = serializers.IntegerField(required=False, default=50, min_value=1)
+    # keyword = serializers.CharField(required=False, allow_blank=True)
+    include_users = serializers.BooleanField(required=False, default=True)
+    join_before_scrape = serializers.BooleanField(required=False, default=False)
+    since = serializers.DateTimeField(required=False)
+
+    keyword_groups = serializers.ListField(
+        child=serializers.CharField(),
+        required=False
+    )
+
+    custom_keywords = serializers.ListField(
+        child=serializers.CharField(),
+        required=False
+    )
+    def validate_since(self, value):
+        if value and value > datetime.now(value.tzinfo):
+            raise serializers.ValidationError("`since` cannot be in the future.")
+        return value

@@ -46,7 +46,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'api',
-    'alerts',  #  ADDED ALERT SYSTEM
+    'alerts',  
     'crispy_forms',
     'crispy_tailwind',
     

@@ -1,91 +1,306 @@
 import asyncio
+import logging
 import os
-from pathlib import Path
-from collections import Counter
+from datetime import datetime, timezone
+from typing import Any, Dict, List
+from collections import Counter, defaultdict
+
+from dotenv import load_dotenv
 from telethon import TelegramClient
-from django.utils import timezone
+from telethon.errors import (
+    ChannelInvalidError,
+    ChannelPrivateError,
+    FloodWaitError,
+    UsernameInvalidError,
+    UsernameNotOccupiedError,
+)
+from telethon.tl.functions.channels import JoinChannelRequest
+from telethon.tl.types import ChannelParticipantsAdmins
 
-from api.models import RawJSONData
+load_dotenv()
+LOGGER = logging.getLogger(__name__)
 
-# Load credentials from settings or .env
-try:
-    from django.conf import settings
-    TELEGRAM_API_ID = getattr(settings, "TELEGRAM_API_ID", None)
-    TELEGRAM_API_HASH = getattr(settings, "TELEGRAM_API_HASH", None)
-    TELEGRAM_PHONE = getattr(settings, "TELEGRAM_PHONE", None)
-except ImportError:
-    TELEGRAM_API_ID = TELEGRAM_API_HASH = TELEGRAM_PHONE = None
-
-if not (TELEGRAM_API_ID and TELEGRAM_API_HASH and TELEGRAM_PHONE):
-    from dotenv import load_dotenv
-    BASE_DIR = Path(__file__).resolve().parent.parent
-    load_dotenv(BASE_DIR / ".env")
-    TELEGRAM_API_ID = int(os.getenv("TELEGRAM_API_ID", 0))
-    TELEGRAM_API_HASH = os.getenv("TELEGRAM_API_HASH", "")
-    TELEGRAM_PHONE = os.getenv("TELEGRAM_PHONE", "")
-
-if not (TELEGRAM_API_ID and TELEGRAM_API_HASH and TELEGRAM_PHONE):
-    raise ValueError("Telegram credentials not found! Make sure they are in settings.py or .env")
+DEFAULT_MESSAGE_LIMIT = 100
+DEFAULT_USER_LIMIT = 100
+MAX_MESSAGE_LIMIT = 1000
+MAX_USER_LIMIT = 5000
 
 
-async def scrape_channel(client, channel, limit=100):
-    """
-    Scrape messages from a single Telegram channel/group.
-    Returns messages and a surge count dictionary.
-    """
-    messages = []
-    surge_counter = Counter()  # counts message frequency per day
+# =========================
+# 🔍 KEYWORD DEFINITIONS
+# =========================
 
-    async for message in client.iter_messages(channel, limit=limit):
-        date_str = message.date.strftime("%Y-%m-%d")
-        surge_counter[date_str] += 1
+POLITICAL_KEYWORDS = [
+    "government", "serikali", "parliament", "senate",
+    "mp", "mca", "governor", "election", "uchaguzi",
+    "vote", "kura", "iebc", "ruto", "raila", "uhuru",
+]
 
-        data = {
-            "id": message.id,
-            "text": message.text,
-            "date": str(message.date),
-            "views": message.views,
-            "forwards": message.forwards,
-            "replies": message.replies.replies if message.replies else None,
-            "sender_id": message.sender_id,
-            "channel": channel,
-            "source": "telegram"
+HATE_KEYWORDS = [
+    "kill", "wipe out", "ua", "chinja",
+    "kikuyu", "luo", "kalenjin", "luhya",
+    "these people", "hawa watu"
+]
+
+ABUSIVE_KEYWORDS = [
+    "idiot", "stupid", "fool",
+    "mjinga", "pumbavu", "fala", "shenzi"
+]
+
+MISINFORMATION_KEYWORDS = [
+    "rigged", "stolen votes", "fake news"
+]
+
+VIOLENCE_KEYWORDS = [
+    "riot", "attack", "revenge",
+    "vurugu", "pigana"
+]
+
+KEYWORD_GROUPS = {
+    "political": POLITICAL_KEYWORDS,
+    "hate": HATE_KEYWORDS,
+    "abusive": ABUSIVE_KEYWORDS,
+    "misinformation": MISINFORMATION_KEYWORDS,
+    "violence": VIOLENCE_KEYWORDS,
+}
+
+
+# =========================
+# 🧠 SCRAPER CLASS
+# =========================
+
+class TelegramScraper:
+    def __init__(self) -> None:
+        api_id = os.getenv("app_api_id")
+        api_hash = os.getenv("app_api_hash")
+
+        if not api_id or not api_hash:
+            raise ValueError("Missing Telegram credentials")
+
+        self.client = TelegramClient("session", int(api_id), api_hash)
+
+    async def _ensure_connected(self):
+        if not self.client.is_connected():
+            await self.client.connect()
+        if not await self.client.is_user_authorized():
+            await self.client.start()
+
+    def _normalize_target(self, target: str) -> str:
+        return target.replace("https://t.me/", "").replace("@", "").strip("/")
+
+    # =========================
+    # 🔍 KEYWORD MATCHING
+    # =========================
+    def _match_keywords(
+        self,
+        text: str,
+        keyword_groups: List[str] | None,
+        custom_keywords: List[str] | None,
+    ):
+        text = (text or "").lower()
+
+        matched_categories = set()
+        matched_keywords = set()
+
+        groups = keyword_groups or KEYWORD_GROUPS.keys()
+
+        for group in groups:
+            for kw in KEYWORD_GROUPS.get(group, []):
+                if kw in text:
+                    matched_categories.add(group)
+                    matched_keywords.add(kw)
+
+        if custom_keywords:
+            for kw in custom_keywords:
+                if kw.lower() in text:
+                    matched_categories.add("custom")
+                    matched_keywords.add(kw)
+
+        return list(matched_categories), list(matched_keywords)
+
+    # =========================
+    # 📊 ANALYTICS ENGINE
+    # =========================
+    def _generate_analytics(self, messages: List[Dict]) -> Dict[str, Any]:
+        total_messages = len(messages)
+
+        category_counter = Counter()
+        keyword_counter = Counter()
+        daily_activity = Counter()
+        matched_count = 0
+
+        for msg in messages:
+            date = msg.get("date")
+            if date:
+                day = date[:10]
+                daily_activity[day] += 1
+
+            if msg.get("matched_keywords"):
+                matched_count += 1
+
+            for cat in msg.get("matched_categories", []):
+                category_counter[cat] += 1
+
+            for kw in msg.get("matched_keywords", []):
+                keyword_counter[kw] += 1
+
+        return {
+            "total_messages": total_messages,
+            "flagged_messages": matched_count,
+            "match_rate": round((matched_count / total_messages) * 100, 2) if total_messages else 0,
+            "top_categories": dict(category_counter.most_common(10)),
+            "top_keywords": dict(keyword_counter.most_common(10)),
+            "daily_activity": dict(daily_activity),
         }
 
-        messages.append(data)
+    # =========================
+    # 📥 SCRAPE MESSAGES
+    # =========================
+    async def scrape_messages(
+        self,
+        target: str,
+        limit: int = DEFAULT_MESSAGE_LIMIT,
+        keyword_groups: List[str] | None = None,
+        custom_keywords: List[str] | None = None,
+        since: datetime | None = None,
+    ):
+        await self._ensure_connected()
 
-        RawJSONData.objects.create(
-            data=data,
-            fetched_at=timezone.now()
-        )
+        entity = await self.client.get_entity(self._normalize_target(target))
 
-    return messages, dict(surge_counter)
+        messages = []
 
+        async for msg in self.client.iter_messages(entity, limit=limit):
+            text = msg.text or ""
 
-async def scrape_multiple_channels(channels, limit=100):
-    """
-    Scrape multiple channels asynchronously.
-    Returns a dictionary with channel data and surge stats.
-    """
-    client = TelegramClient("telegram_session", TELEGRAM_API_ID, TELEGRAM_API_HASH)
-    await client.start(TELEGRAM_PHONE)
+            if since and msg.date and msg.date < since:
+                continue
 
-    results = {}
-    for channel in channels:
-        messages, surge = await scrape_channel(client, channel, limit)
-        results[channel] = {
+            matched_categories, matched_keywords = self._match_keywords(
+                text, keyword_groups, custom_keywords
+            )
+
+            # skip if filtering enabled but no match
+            if (keyword_groups or custom_keywords) and not matched_keywords:
+                continue
+
+            messages.append(
+                {
+                    "id": msg.id,
+                    "date": msg.date.isoformat() if msg.date else None,
+                    "text": text,
+                    "views": msg.views,
+                    "forwards": msg.forwards,
+                    "sender_id": msg.sender_id,
+                    "matched_categories": matched_categories,
+                    "matched_keywords": matched_keywords,
+                }
+            )
+
+        analytics = self._generate_analytics(messages)
+
+        return {
             "messages": messages,
-            "surge": surge
+            "analytics": analytics,
         }
 
-    await client.disconnect()
-    return results
+    # =========================
+    # 👥 USERS
+    # =========================
+    async def get_users(self, target: str, limit=DEFAULT_USER_LIMIT):
+        await self._ensure_connected()
+
+        entity = await self.client.get_entity(self._normalize_target(target))
+
+        users = []
+        async for user in self.client.iter_participants(entity, limit=limit):
+            users.append(
+                {
+                    "id": user.id,
+                    "username": user.username,
+                    "first_name": user.first_name,
+                }
+            )
+
+        return users
+
+    # =========================
+    # 🚀 MAIN SEARCH
+    # =========================
+    async def search_telegram(
+        self,
+        target: str,
+        message_limit=DEFAULT_MESSAGE_LIMIT,
+        user_limit=DEFAULT_USER_LIMIT,
+        keyword_groups=None,
+        custom_keywords=None,
+        include_users=True,
+    ):
+        try:
+            await self._ensure_connected()
+
+            messages_data = await self.scrape_messages(
+                target,
+                message_limit,
+                keyword_groups,
+                custom_keywords,
+            )
+
+            users = []
+            if include_users:
+                users = await self.get_users(target, user_limit)
+
+            return {
+                "target": target,
+                "scraped_at": datetime.now(timezone.utc).isoformat(),
+                "messages": messages_data["messages"],
+                "analytics": messages_data["analytics"],
+                "users": users,
+            }
+
+        except Exception as e:
+            LOGGER.exception("Error")
+            return {"error": str(e)}
+
+        finally:
+            await self.client.disconnect()
 
 
-def run_telegram_scraper(channels, limit=100):
-    """
-    Synchronous wrapper for scraping multiple channels.
-    """
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    return loop.run_until_complete(scrape_multiple_channels(channels, limit))
+# =========================
+# 🔁 SYNC WRAPPER
+# =========================
+
+def search_telegram(
+    target: str,
+    keyword_groups=None,
+    custom_keywords=None,
+):
+    scraper = TelegramScraper()
+    return asyncio.run(
+        scraper.search_telegram(
+            target=target,
+            keyword_groups=keyword_groups,
+            custom_keywords=custom_keywords,
+        )
+    )
+
+
+# =========================
+# ▶️ RUN
+# =========================
+
+async def main():
+    scraper = TelegramScraper()
+
+    results = await scraper.search_telegram(
+        target="itsminepeter",
+        message_limit=50,
+        keyword_groups=["political", "hate", "abusive"],
+    )
+
+    print(results["analytics"])
+
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    asyncio.run(main())

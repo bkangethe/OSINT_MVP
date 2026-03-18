@@ -19,6 +19,6 @@ path("geolocation/mentions/", views.geolocation_analysis, name="geolocation_anal
 path("narratives/timeline/", views.narrative_timeline, name="narrative_timeline"),
 path("intel/brief/", views.intel_brief, name="intel_brief"),
 path("risk/scoring/", views.risk_scoring, name="risk_scoring"),
-path("telegram/scraper/", views.telegram_scrape, name="telegram_scraper"),
+path("telegram/scrape/", views.TelegramScrapeAPIView.as_view(), name="telegram_scraper"),
 ]
 
